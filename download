@@ -1,0 +1,226 @@
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useTheme } from "next-themes";
+import { Menu, PanelRight, Sun, Moon } from "lucide-react";
+
+import { storage } from "@/utils/storage";
+import { useChat } from "@/hooks/useChat";
+
+import ApiKeyModal   from "@/components/ApiKeyModal";
+import LeftSidebar   from "@/components/LeftSidebar";
+import RightSidebar  from "@/components/RightSidebar";
+import ChatMessage   from "@/components/ChatMessage";
+import ThinkingIndicator from "@/components/ThinkingIndicator";
+import WelcomeScreen from "@/components/WelcomeScreen";
+import ChatInput     from "@/components/ChatInput";
+import { Button }    from "@/components/ui/Button";
+import { Badge }     from "@/components/ui/Badge";
+
+const INITIAL_CHATS = [
+  { id: "c1", label: "Getting started with oclxn",     pinned: true,  time: "Just now" },
+  { id: "c2", label: "Python web scraper help",         pinned: false, time: "1 hour ago" },
+  { id: "c3", label: "Creative writing project",        pinned: false, time: "Yesterday" },
+  { id: "c4", label: "React component architecture",    pinned: false, time: "2 days ago" },
+  { id: "c5", label: "Investment strategies",           pinned: false, time: "3 days ago" },
+];
+
+export default function App() {
+  const [apiKey,      setApiKey]      = useState(storage.getApiKey());
+  const [leftOpen,    setLeftOpen]    = useState(false);
+  const [rightOpen,   setRightOpen]   = useState(false);
+  const [isMobile,    setIsMobile]    = useState(false);
+  const [activeTab,   setActiveTab]   = useState("chats");
+  const [inputValue,  setInputValue]  = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeChat,  setActiveChat]  = useState("new");
+  const [chats,       setChats]       = useState(INITIAL_CHATS);
+
+  const scrollRef   = useRef(null);
+  const textareaRef = useRef(null);
+  const { theme, setTheme } = useTheme();
+
+  const {
+    messages, isThinking, isStreaming,
+    sendMessage, stopStreaming, regenerate, clearMessages,
+  } = useChat();
+
+  // Responsive sidebar
+  useEffect(() => {
+    const check = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      setLeftOpen(!mobile);
+      if (mobile) setRightOpen(false);
+    };
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
+  // Auto-scroll
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+    }
+  }, [messages, isThinking]);
+
+  const saveKey = (k) => {
+    storage.setApiKey(k);
+    setApiKey(k);
+  };
+
+  const handleNewChat = () => {
+    clearMessages();
+    setActiveChat("new");
+    if (isMobile) setLeftOpen(false);
+    textareaRef.current?.focus();
+  };
+
+  const handleSelectChat = (id) => {
+    clearMessages();
+    setActiveChat(id);
+    if (isMobile) setLeftOpen(false);
+  };
+
+  const handleSend = useCallback(async () => {
+    if (!inputValue.trim()) return;
+    const text = inputValue;
+    setInputValue("");
+
+    // Auto-title the new chat on first message
+    if (messages.length === 0) {
+      const title = text.trim().slice(0, 42) + (text.length > 42 ? "…" : "");
+      const newId = "c" + Date.now();
+      setActiveChat(newId);
+      setChats((prev) => [{ id: newId, label: title, pinned: false, time: "Just now" }, ...prev]);
+    }
+
+    await sendMessage(text, apiKey);
+  }, [inputValue, messages.length, sendMessage, apiKey]);
+
+  const handleWelcomePrompt = (text) => {
+    setInputValue(text);
+    // Use a tiny delay so inputValue state updates before send
+    setTimeout(() => {
+      if (messages.length === 0) {
+        const title = text.slice(0, 42) + (text.length > 42 ? "…" : "");
+        const newId = "c" + Date.now();
+        setActiveChat(newId);
+        setChats((prev) => [{ id: newId, label: title, pinned: false, time: "Just now" }, ...prev]);
+      }
+      sendMessage(text, apiKey);
+      setInputValue("");
+    }, 50);
+  };
+
+  return (
+    <>
+      {!apiKey && <ApiKeyModal onSave={saveKey} />}
+
+      <div className="flex h-screen w-full bg-background overflow-hidden">
+        {/* ── Left Sidebar ── */}
+        <LeftSidebar
+          open={leftOpen}
+          onClose={() => setLeftOpen(false)}
+          isMobile={isMobile}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          chats={chats}
+          setChats={setChats}
+          activeChat={activeChat}
+          onNewChat={handleNewChat}
+          onSelectChat={handleSelectChat}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+        />
+
+        {/* ── Main Chat ── */}
+        <div className="flex flex-col flex-1 min-w-0">
+          {/* Top Bar */}
+          <header className="flex items-center justify-between px-4 h-14 border-b border-border bg-background/80 backdrop-blur-sm shrink-0 z-10">
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setLeftOpen((p) => !p)}
+              >
+                <Menu className="w-4 h-4" />
+              </Button>
+              <div className="flex items-center gap-2">
+                <span className="font-black text-sm logo-gradient">oclxn</span>
+                <Badge
+                  variant="outline"
+                  className="text-[10px] px-1.5 py-0 border-primary/30 text-primary"
+                >
+                  AI
+                </Badge>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/10 border border-green-500/20">
+                <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                <span className="text-[10px] text-green-600 font-medium">Live</span>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              >
+                {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setRightOpen((p) => !p)}
+              >
+                <PanelRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </header>
+
+          {/* Messages */}
+          <div ref={scrollRef} className="flex-1 overflow-y-auto">
+            <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
+              {messages.length === 0 ? (
+                <WelcomeScreen onPrompt={handleWelcomePrompt} />
+              ) : (
+                <>
+                  {messages
+                    .filter((m) => m.content !== "" || m.role === "user")
+                    .map((msg, i) => (
+                      <ChatMessage
+                        key={msg.id}
+                        message={msg}
+                        isLast={i === messages.length - 1}
+                        isStreaming={isStreaming}
+                        onRegenerate={() => regenerate(apiKey)}
+                      />
+                    ))}
+                  {isThinking && <ThinkingIndicator />}
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Input */}
+          <ChatInput
+            value={inputValue}
+            onChange={setInputValue}
+            onSend={handleSend}
+            onStop={stopStreaming}
+            isThinking={isThinking}
+            isStreaming={isStreaming}
+            disabled={!apiKey}
+            textareaRef={textareaRef}
+          />
+        </div>
+
+        {/* ── Right Sidebar ── */}
+        <RightSidebar open={rightOpen} onClose={() => setRightOpen(false)} />
+      </div>
+    </>
+  );
+}
