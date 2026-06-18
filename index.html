@@ -3,1349 +3,946 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>oclxn - File Manager by syedevelopers</title>
-        <script src="https://cdn.tailwindcss.com"></script>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-        <link
-            rel="stylesheet"
-            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-            integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
-            crossorigin="anonymous"
-            referrerpolicy="no-referrer"
-        />
-        <script>
-            tailwind.config = {
-                theme: {
-                    extend: {
-                        fontFamily: {
-                            sans: ["Inter", "sans-serif"],
-                        },
-                    },
-                },
-            };
-        </script>
+        <title>oclxn - by Syed Developers</title>
+        <meta name="description" content="oclxn - Advanced AI Assistant by Syed Developers. Created by Syed Haider Hussein. Powered by real AI intelligence." />
+        <meta name="author" content="Syed Haider Hussein | Syed Developers" />
+        <!-- DO NOT UPDATE THESE SCRIPTS IMPORTS -->
+        <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+        <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
         <style type="text/tailwindcss">
-            @layer utilities {
-                .focus-ring {
-                    @apply focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500;
-                }
-                .transition-all-fast {
-                    @apply transition-all duration-200 ease-in-out;
-                }
-                /* Custom scrollbar for a cleaner look */
-                ::-webkit-scrollbar {
-                    width: 8px;
-                    height: 8px;
-                }
-                ::-webkit-scrollbar-track {
-                    background: #f1f5f9; /* slate-100 */
-                }
-                ::-webkit-scrollbar-thumb {
-                    background: #94a3b8; /* slate-400 */
-                    border-radius: 10px;
-                }
-                ::-webkit-scrollbar-thumb:hover {
-                    background: #64748b; /* slate-500 */
-                }
-                /* Custom styles for icon state switching from provided sidebar */
-                .group.nav-active .icon-inactive,
-                .group:not(.nav-active) .icon-active {
-                    display: none;
-                }
-                .group.nav-active .icon-active,
-                .group:not(.nav-active) .icon-inactive {
-                    display: inline-block;
+            @layer base {
+                * { border-color: var(--border); }
+                body {
+                    background-color: var(--background);
+                    color: var(--foreground);
+                    font-family: "Inter", sans-serif;
                 }
             }
-        </style>
-    </head>
-
-    <body class="bg-slate-100 font-sans text-slate-800 antialiased h-screen w-screen overflow-hidden flex">
-        <!-- STATIC UI STRUCTURE -->
-
-        <!-- Sidebar (New Design) -->
-        <aside id="sidebar" class="w-[270px] h-screen bg-white flex flex-col border-r border-slate-200 flex-shrink-0 transition-all-fast max-lg:absolute max-lg:-translate-x-full z-30">
-            <!-- Logo -->
-            <div class="px-7 pt-7 pb-8 flex-shrink-0">
-                <a href="#" class="flex items-center space-x-2.5">
-                    <i class="fa-solid fa-cube text-violet-700 text-3xl"></i>
-                    <span class="text-xl font-medium text-slate-800">Docu<span class="font-bold">Vault</span></span>
-                </a>
-            </div>
-
-            <!-- Navigation Section -->
-            <nav class="flex-grow px-5 flex flex-col overflow-y-auto">
-                <!-- Menu Section -->
-                <div>
-                    <h3 class="px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Menu</h3>
-                    <ul id="nav-menu" class="mt-2 space-y-1"></ul>
-                </div>
-
-                <!-- Usage Card Section -->
-                <div id="usage-card-container" class="mt-6 px-1"></div>
-
-                <!-- Other Section -->
-                <div class="mt-auto pt-6">
-                    <h3 class="px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider">Other</h3>
-                    <ul id="nav-other" class="mt-2 space-y-1"></ul>
-                </div>
-            </nav>
-        </aside>
-
-        <!-- Main Content -->
-        <div class="flex-grow flex flex-col h-full overflow-hidden">
-            <!-- Header -->
-            <header class="h-16 bg-white border-b border-slate-200 flex-shrink-0 flex items-center justify-between px-4 md:px-6">
-                <!-- Left Section: Menu Toggle + Breadcrumbs -->
-                <div class="flex items-center gap-3">
-                    <button id="menu-toggle-btn" class="lg:hidden p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors">
-                        <i class="fa-solid fa-bars text-lg"></i>
-                    </button>
-                    <div id="breadcrumbs" class="flex items-center gap-2 text-sm"></div>
-                </div>
-
-                <!-- Right Section: Search + View Controls + Actions -->
-                <div class="flex items-center gap-2 md:gap-3">
-                    <!-- Search Bar -->
-                    <div class="relative hidden sm:block">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                        <input
-                            id="search-input"
-                            type="text"
-                            placeholder="Search files..."
-                            class="w-48 lg:w-64 pl-9 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all placeholder:text-slate-400"
-                        />
-                    </div>
-
-                    <!-- Mobile Search Button -->
-                    <button id="mobile-search-btn" class="sm:hidden p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                    </button>
-
-                    <!-- View Toggle Controls -->
-                    <div class="flex items-center bg-slate-100 p-1 rounded-xl">
-                        <div id="view-controls" class="flex items-center"></div>
-                    </div>
-
-                    <!-- Separator -->
-                    <div class="w-px h-8 bg-slate-200 hidden md:block"></div>
-
-                    <!-- Action Buttons -->
-                    <div class="flex items-center gap-1">
-                        <!-- New Folder Button -->
-                        <button id="new-folder-btn" class="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors" title="New Folder">
-                            <i class="fa-solid fa-folder-plus"></i>
-                        </button>
-
-                        <!-- Upload Button -->
-                        <button id="upload-btn" class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors shadow-sm">
-                            <i class="fa-solid fa-cloud-arrow-up"></i>
-                            <span class="hidden md:inline">Upload</span>
-                        </button>
-                    </div>
-                </div>
-            </header>
-
-            <!-- File Display Area -->
-            <main id="file-container-wrapper" class="flex-grow overflow-y-auto p-4 md:p-6">
-                <div id="quick-access-container"></div>
-                <h2 id="current-folder-title" class="text-xl font-semibold text-slate-700 mt-6 mb-4"></h2>
-                <div id="file-container-header" class="hidden"></div>
-                <div id="file-container" class="outline-none" tabindex="-1"></div>
-                <div id="selection-box" class="fixed border-2 border-blue-500 bg-blue-500 bg-opacity-20 pointer-events-none hidden z-40"></div>
-            </main>
-        </div>
-
-        <!-- Preview Pane (Replaces Info Panel) -->
-        <aside id="preview-pane" class="bg-white w-80 lg:w-96 h-full flex-shrink-0 border-l border-slate-200 transition-all-fast translate-x-full absolute right-0 top-0 z-20 flex flex-col">
-            <div id="preview-pane-header" class="h-16 flex items-center justify-between px-4 border-b border-slate-200 flex-shrink-0"></div>
-            <div id="preview-pane-content" class="flex-grow p-4 overflow-y-auto"></div>
-        </aside>
-
-        <!-- Context Menu, Modal, Notification, Drag Overlay (Unchanged) -->
-        <div id="context-menu" class="hidden fixed bg-white border border-slate-200 rounded-lg shadow-xl py-2 z-50 min-w-[180px]"></div>
-        <div id="modal-overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-            <div id="modal-content" class="bg-white rounded-lg shadow-xl w-full max-w-md">
-                <div id="modal-header" class="p-4 sm:p-6 border-b border-slate-200"><h3 id="modal-title" class="text-lg font-semibold text-slate-800"></h3></div>
-                <div id="modal-body" class="p-4 sm:p-6"></div>
-                <div id="modal-footer" class="p-4 sm:p-6 bg-slate-50 rounded-b-lg flex justify-end gap-3"></div>
-            </div>
-        </div>
-        <div id="notification" class="hidden fixed bottom-5 right-5 bg-slate-800 text-white py-2 px-5 rounded-lg shadow-xl animate-fade-in-out z-50"><p id="notification-message"></p></div>
-        <div id="drag-overlay" class="hidden fixed inset-0 bg-blue-500 bg-opacity-20 border-4 border-dashed border-blue-600 z-50 pointer-events-none flex items-center justify-center">
-            <div class="text-center bg-white p-8 rounded-lg shadow-2xl">
-                <i class="fa-solid fa-cloud-arrow-up fa-4x text-blue-500"></i>
-                <p class="mt-4 text-2xl font-bold text-slate-700">Drop files to upload</p>
-            </div>
-        </div>
-
-        <script>
-            document.addEventListener("DOMContentLoaded", () => {
-                // --- 1. DATA (SINGLE SOURCE OF TRUTH) ---
-                let fileSystemData = [
-                    {
-                        id: "1",
-                        parentId: null,
-                        type: "folder",
-                        name: "Projects",
-                        dateModified: "2024-05-10T10:00:00Z",
-                        dateCreated: "2023-01-15T09:00:00Z",
-                        size: 0,
-                        owner: "Me",
-                        isFavorite: true,
-                        isTrashed: false,
-                    },
-                    {
-                        id: "2",
-                        parentId: null,
-                        type: "folder",
-                        name: "Photos",
-                        dateModified: "2024-05-12T11:30:00Z",
-                        dateCreated: "2023-02-20T14:00:00Z",
-                        size: 0,
-                        owner: "Me",
-                        isFavorite: false,
-                        isTrashed: false,
-                    },
-                    {
-                        id: "3",
-                        parentId: null,
-                        type: "folder",
-                        name: "Documents",
-                        dateModified: "2024-03-20T18:45:00Z",
-                        dateCreated: "2023-03-20T18:45:00Z",
-                        size: 0,
-                        owner: "Me",
-                        isFavorite: false,
-                        isTrashed: false,
-                    },
-                    {
-                        id: "4",
-                        parentId: null,
-                        type: "pdf",
-                        name: "Annual Report 2023.pdf",
-                        dateModified: "2024-04-25T14:20:00Z",
-                        dateCreated: "2023-12-01T11:00:00Z",
-                        size: 5242880,
-                        owner: "Me",
-                        isFavorite: true,
-                        isTrashed: false,
-                    },
-                    {
-                        id: "5",
-                        parentId: null,
-                        type: "jpg",
-                        name: "Team Retreat.jpg",
-                        dateModified: "2024-05-01T09:15:00Z",
-                        dateCreated: "2024-05-01T09:15:00Z",
-                        size: 8912896,
-                        owner: "Me",
-                        isFavorite: false,
-                        isTrashed: false,
-                        content: "https://images.unsplash.com/photo-1568992687947-868a62a9f521?q=80&w=1932",
-                    },
-                    {
-                        id: "6",
-                        parentId: "1",
-                        type: "folder",
-                        name: "Website Redesign",
-                        dateModified: "2024-05-08T16:00:00Z",
-                        dateCreated: "2024-02-01T13:00:00Z",
-                        size: 0,
-                        owner: "Me",
-                        isFavorite: true,
-                        isTrashed: false,
-                    },
-                    {
-                        id: "7",
-                        parentId: "1",
-                        type: "docx",
-                        name: "Marketing Plan.docx",
-                        dateModified: "2024-04-30T12:00:00Z",
-                        dateCreated: "2024-03-10T10:00:00Z",
-                        size: 122880,
-                        owner: "Me",
-                        isFavorite: false,
-                        isTrashed: false,
-                    },
-                    {
-                        id: "8",
-                        parentId: "2",
-                        type: "folder",
-                        name: "Vacation 2024",
-                        dateModified: "2024-05-12T11:30:00Z",
-                        dateCreated: "2024-05-12T11:30:00Z",
-                        size: 0,
-                        owner: "Jane Doe",
-                        isFavorite: false,
-                        isTrashed: false,
-                    },
-                    {
-                        id: "9",
-                        parentId: "2",
-                        type: "png",
-                        name: "Logo Concept.png",
-                        dateModified: "2024-02-15T17:00:00Z",
-                        dateCreated: "2024-02-14T11:00:00Z",
-                        size: 2097152,
-                        owner: "Me",
-                        isFavorite: false,
-                        isTrashed: false,
-                        content: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=1974",
-                    },
-                    {
-                        id: "10",
-                        parentId: "3",
-                        type: "xlsx",
-                        name: "Q2 Budget.xlsx",
-                        dateModified: "2024-03-20T18:45:00Z",
-                        dateCreated: "2024-03-18T09:20:00Z",
-                        size: 307200,
-                        owner: "John Smith",
-                        isFavorite: false,
-                        isTrashed: false,
-                    },
-                    {
-                        id: "11",
-                        parentId: "6",
-                        type: "folder",
-                        name: "Assets",
-                        dateModified: "2024-04-20T10:00:00Z",
-                        dateCreated: "2024-04-19T14:00:00Z",
-                        size: 0,
-                        owner: "Me",
-                        isFavorite: false,
-                        isTrashed: false,
-                    },
-                    {
-                        id: "12",
-                        parentId: "6",
-                        type: "txt",
-                        name: "Meeting Notes.txt",
-                        dateModified: "2024-05-08T16:00:00Z",
-                        dateCreated: "2024-05-08T15:30:00Z",
-                        size: 4096,
-                        owner: "Me",
-                        isFavorite: false,
-                        isTrashed: false,
-                        content:
-                            "Q2 Planning Meeting Notes\n\nAttendees: Alex, Jane, John\n\n- Discussed marketing budget for the new campaign.\n- Reviewed preliminary designs for the website redesign.\n- Action item: Alex to finalize the project timeline by EOD Friday.",
-                    },
-                    {
-                        id: "13",
-                        parentId: null,
-                        type: "zip",
-                        name: "Archived Files.zip",
-                        dateModified: "2024-01-10T11:00:00Z",
-                        dateCreated: "2024-01-10T11:00:00Z",
-                        size: 157286400,
-                        owner: "Me",
-                        isFavorite: false,
-                        isTrashed: true,
-                    },
-                    {
-                        id: "14",
-                        parentId: "8",
-                        type: "mov",
-                        name: "Beach Sunset.mov",
-                        dateModified: "2024-05-11T20:00:00Z",
-                        dateCreated: "2024-05-11T19:45:00Z",
-                        size: 262144000,
-                        owner: "Me",
-                        isFavorite: false,
-                        isTrashed: false,
-                    },
-                ];
-
-                // --- 2. HELPERS & CONFIG --- (Unchanged from previous version)
-                const Helpers = {
-                    formatBytes: (b, d = 2) => {
-                        if (0 === b) return "0 Bytes";
-                        const e = 0 > d ? 0 : d,
-                            f = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"],
-                            g = Math.floor(Math.log(b) / Math.log(1024));
-                        return parseFloat((b / Math.pow(1024, g)).toFixed(e)) + " " + f[g];
-                    },
-                    formatDate: (d) => new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
-                    getIconForType: (d) => {
-                        const e = {
-                            folder: { icon: "fa-folder", color: "text-blue-500" },
-                            pdf: { icon: "fa-file-pdf", color: "text-red-500" },
-                            jpg: { icon: "fa-file-image", color: "text-purple-500" },
-                            jpeg: { icon: "fa-file-image", color: "text-purple-500" },
-                            png: { icon: "fa-file-image", color: "text-purple-500" },
-                            docx: { icon: "fa-file-word", color: "text-sky-600" },
-                            xlsx: { icon: "fa-file-excel", color: "text-green-600" },
-                            zip: { icon: "fa-file-zipper", color: "text-amber-500" },
-                            txt: { icon: "fa-file-lines", color: "text-slate-500" },
-                            mov: { icon: "fa-file-video", color: "text-orange-500" },
-                            mp4: { icon: "fa-file-video", color: "text-orange-500" },
-                            mp3: { icon: "fa-music", color: "text-pink-500" },
-                            wav: { icon: "fa-music", color: "text-pink-500" },
-                            default: { icon: "fa-file", color: "text-slate-500" },
-                        };
-                        return e[d] || e.default;
-                    },
-                    generateId: () => `id_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                    showNotification: (d, e = 3e3) => {
-                        (UI.notificationMessage.textContent = d), UI.notification.classList.remove("hidden"), setTimeout(() => UI.notification.classList.add("hidden"), e);
-                    },
-                };
-
-                // --- 3. UI ELEMENT REFERENCES ---
-                const UI = {
-                    sidebar: document.getElementById("sidebar"),
-                    navMenu: document.getElementById("nav-menu"),
-                    navOther: document.getElementById("nav-other"),
-                    usageCardContainer: document.getElementById("usage-card-container"),
-                    menuToggleBtn: document.getElementById("menu-toggle-btn"),
-                    header: document.querySelector("header"),
-                    breadcrumbs: document.getElementById("breadcrumbs"),
-                    searchInput: document.getElementById("search-input"),
-                    viewControls: document.getElementById("view-controls"),
-                    previewToggleControl: document.getElementById("preview-toggle-control"),
-                    fileContainerWrapper: document.getElementById("file-container-wrapper"),
-                    fileContainer: document.getElementById("file-container"),
-                    fileContainerHeader: document.getElementById("file-container-header"),
-                    previewPane: document.getElementById("preview-pane"),
-                    previewPaneHeader: document.getElementById("preview-pane-header"),
-                    previewPaneContent: document.getElementById("preview-pane-content"),
-                    contextMenu: document.getElementById("context-menu"),
-                    modalOverlay: document.getElementById("modal-overlay"),
-                    modalContent: document.getElementById("modal-content"),
-                    modalTitle: document.getElementById("modal-title"),
-                    modalBody: document.getElementById("modal-body"),
-                    modalFooter: document.getElementById("modal-footer"),
-                    notification: document.getElementById("notification"),
-                    notificationMessage: document.getElementById("notification-message"),
-                    dragOverlay: document.getElementById("drag-overlay"),
-                    selectionBox: document.getElementById("selection-box"),
-                    quickAccessContainer: document.getElementById("quick-access-container"),
-                    currentFolderTitle: document.getElementById("current-folder-title"),
-                };
-
-                // --- 4. STATE MANAGEMENT ---
-                const State = {
-                    currentPathId: null, // null=root, 'favorites', 'trash', or folder ID, or a filter like 'documents'
-                    currentView: "grid", // 'grid' or 'list'
-                    selectedItemIds: new Set(),
-                    sortBy: { key: "name", order: "asc" },
-                    clipboard: { action: null, itemIds: new Set() },
-                    isPreviewPaneOpen: false,
-                    activePreviewTab: "info", // 'info', 'preview', 'raw'
-                    currentSearchQuery: "",
-                    init() {
-                        this.currentView = localStorage.getItem("docuvault_view") || "grid";
-                        // Preview pane always starts closed
-                        this.isPreviewPaneOpen = false;
-                    },
-                    setCurrentPathId(id) {
-                        this.currentPathId = id;
-                        this.selectedItemIds.clear();
-                    },
-                    setView(view) {
-                        this.currentView = view;
-                        localStorage.setItem("docuvault_view", view);
-                    },
-                    togglePreviewPane() {
-                        this.isPreviewPaneOpen = !this.isPreviewPaneOpen;
-                    },
-                    openPreviewPane() {
-                        this.isPreviewPaneOpen = true;
-                    },
-                    closePreviewPane() {
-                        this.isPreviewPaneOpen = false;
-                    },
-                    setActivePreviewTab(tab) {
-                        this.activePreviewTab = tab;
-                    },
-                    toggleSelection(id) {
-                        if (this.selectedItemIds.has(id)) {
-                            this.selectedItemIds.delete(id);
-                        } else {
-                            this.selectedItemIds.add(id);
-                        }
-                    },
-                    setSelection(ids) {
-                        this.selectedItemIds = new Set(ids);
-                    },
-                    clearSelection() {
-                        this.selectedItemIds.clear();
-                    },
-                    setSort(key) {
-                        if (this.sortBy.key === key) {
-                            this.sortBy.order = this.sortBy.order === "asc" ? "desc" : "asc";
-                        } else {
-                            this.sortBy.key = key;
-                            this.sortBy.order = "asc";
-                        }
-                    },
-                };
-                State.init();
-
-                // --- 5. API (Data Logic) ---
-                const API = {
-                    getItem: (id) => fileSystemData.find((item) => item.id === id),
-                    getItemsInCurrentPath: () => {
-                        const filterMap = {
-                            documents: ["pdf", "docx", "xlsx", "txt"],
-                            images: ["jpg", "jpeg", "png"],
-                            videos: ["mov", "mp4"],
-                            audios: ["mp3", "wav"],
-                        };
-
-                        if (State.currentPathId === "trash") return API.getTrashedItems();
-                        if (State.currentPathId === "favorites") return API.getFavoriteItems();
-                        if (State.currentSearchQuery) {
-                            return fileSystemData.filter((item) => item.name.toLowerCase().includes(State.currentSearchQuery.toLowerCase()) && !item.isTrashed);
-                        }
-                        if (filterMap[State.currentPathId]) {
-                            return fileSystemData.filter((item) => filterMap[State.currentPathId].includes(item.type) && !item.isTrashed);
-                        }
-                        return fileSystemData.filter((item) => item.parentId === State.currentPathId && !item.isTrashed);
-                    },
-                    getPath: (id) => {
-                        const p = [];
-                        let c = API.getItem(id);
-                        while (c) {
-                            p.unshift(c);
-                            c = API.getItem(c.parentId);
-                        }
-                        return p;
-                    },
-                    getFavoriteItems: () => fileSystemData.filter((item) => item.isFavorite && !item.isTrashed),
-                    getTrashedItems: () => fileSystemData.filter((item) => item.isTrashed),
-                    getRecentItems: (limit = 4) =>
-                        [...fileSystemData]
-                            .filter((i) => !i.isTrashed)
-                            .sort((a, b) => new Date(b.dateModified) - new Date(a.dateModified))
-                            .slice(0, limit),
-                    createFolder: (name, parentId) => {
-                        fileSystemData.push({
-                            id: Helpers.generateId(),
-                            parentId,
-                            type: "folder",
-                            name,
-                            dateModified: new Date().toISOString(),
-                            dateCreated: new Date().toISOString(),
-                            size: 0,
-                            owner: "Me",
-                            isFavorite: false,
-                            isTrashed: false,
-                        });
-                    },
-                    renameItem: (id, newName) => {
-                        const i = API.getItem(id);
-                        if (i) {
-                            i.name = newName;
-                            i.dateModified = new Date().toISOString();
-                        }
-                    },
-                    uploadFiles: (files, parentId) => {
-                        for (const f of files) {
-                            fileSystemData.push({
-                                id: Helpers.generateId(),
-                                parentId,
-                                type: f.name.split(".").pop().toLowerCase(),
-                                name: f.name,
-                                dateModified: new Date().toISOString(),
-                                dateCreated: new Date().toISOString(),
-                                size: f.size,
-                                owner: "Me",
-                                isFavorite: false,
-                                isTrashed: false,
-                            });
-                        }
-                    },
-                    moveItems: (itemIds, targetFolderId) => {
-                        itemIds.forEach((id) => {
-                            const i = API.getItem(id);
-                            if (i && i.parentId !== targetFolderId) {
-                                i.parentId = targetFolderId;
-                                i.dateModified = new Date().toISOString();
-                            }
-                        });
-                    },
-                    copyItems: (itemIds, targetFolderId) => {
-                        itemIds.forEach((id) => {
-                            const o = API.getItem(id);
-                            if (o) {
-                                const c = { ...o, id: Helpers.generateId(), parentId: targetFolderId, dateModified: new Date().toISOString(), dateCreated: new Date().toISOString() };
-                                fileSystemData.push(c);
-                                if (o.type === "folder") {
-                                    API.copyItems(
-                                        fileSystemData.filter((i) => i.parentId === o.id).map((i) => i.id),
-                                        c.id
-                                    );
-                                }
-                            }
-                        });
-                    },
-                    toggleFavorite: (itemIds) => {
-                        itemIds.forEach((id) => {
-                            const i = API.getItem(id);
-                            if (i) i.isFavorite = !i.isFavorite;
-                        });
-                    },
-                    trashItems: (itemIds) => {
-                        itemIds.forEach((id) => {
-                            const i = API.getItem(id);
-                            if (i) i.isTrashed = true;
-                        });
-                    },
-                    restoreItems: (itemIds) => {
-                        itemIds.forEach((id) => {
-                            const i = API.getItem(id);
-                            if (i) i.isTrashed = false;
-                        });
-                    },
-                    deletePermanently: (itemIds) => {
-                        const d = new Set(itemIds);
-                        itemIds.forEach((id) => {
-                            const i = API.getItem(id);
-                            if (i && i.type === "folder") {
-                                const f = (p) => {
-                                    const c = fileSystemData.filter((x) => x.parentId === p);
-                                    c.forEach((x) => {
-                                        d.add(x.id);
-                                        if (x.type === "folder") f(x.id);
-                                    });
-                                };
-                                f(id);
-                            }
-                        });
-                        fileSystemData = fileSystemData.filter((i) => !d.has(i.id));
-                    },
-                    getStorageStats: () => {
-                        const s = fileSystemData.filter((i) => !i.isTrashed).reduce((sum, item) => sum + item.size, 0);
-                        const q = 200 * 1024 * 1024 * 1024;
-                        return { totalSize: s, totalQuota: q, usage: s / q };
-                    },
-                };
-
-                // --- 6. RENDERER (DOM Updates) ---
-                const Renderer = {
-                    renderAll() {
-                        this.renderSidebar();
-                        this.renderHeader();
-                        this.renderFiles();
-                        this.renderPreviewPane();
-                    },
-                    renderSidebar() {
-                        const menuItems = [
-                            { id: null, name: "Dashboard", iconInactive: "fa-regular fa-grip-vertical", iconActive: "fa-solid fa-grip-vertical" },
-                            { id: "recent", name: "Recent files", iconInactive: "fa-regular fa-clock", iconActive: "fa-solid fa-clock" },
-                            { id: "favorites", name: "Favorites", iconInactive: "fa-regular fa-star", iconActive: "fa-solid fa-star" },
-                            { type: "divider" },
-                            { id: "documents", name: "Documents", iconInactive: "fa-regular fa-file-lines", iconActive: "fa-solid fa-file-lines" },
-                            { id: "images", name: "Images", iconInactive: "fa-regular fa-image", iconActive: "fa-solid fa-image" },
-                            { id: "videos", name: "Videos", iconInactive: "fa-regular fa-circle-play", iconActive: "fa-solid fa-circle-play" },
-                            { id: "audios", name: "Audios", iconInactive: "fa-solid fa-music", iconActive: "fa-solid fa-music" },
-                            { id: "trash", name: "Deleted files", iconInactive: "fa-regular fa-trash-can", iconActive: "fa-solid fa-trash-can" },
-                        ];
-                        const otherItems = [
-                            { id: "settings", name: "Settings", icon: "fa-solid fa-gear" },
-                            { id: "support", name: "Chat & Support", icon: "fa-solid fa-headset" },
-                            { id: "help", name: "Help Center", icon: "fa-regular fa-circle-question" },
-                        ];
-                        const renderLink = (item) => {
-                            const isActive = String(State.currentPathId) === String(item.id);
-                            const activeClasses = "bg-white text-slate-800 font-semibold border border-slate-200 shadow-sm";
-                            const inactiveClasses = "text-slate-500 font-medium hover:bg-slate-100 hover:text-slate-800";
-                            return `<li><a href="#" data-path-id="${item.id}" class="nav-item group flex items-center space-x-3 px-4 py-2.5 rounded-xl transition-all duration-200 ${
-                                isActive ? `nav-active ${activeClasses}` : inactiveClasses
-                            }">
-                        ${
-                            item.iconInactive
-                                ? `<i class="${item.iconInactive} icon-inactive w-6 text-center text-lg"></i><i class="${item.iconActive} icon-active w-6 text-center text-lg"></i>`
-                                : `<i class="${item.icon} w-6 text-center text-lg"></i>`
-                        }
-                        <span>${item.name}</span></a></li>`;
-                        };
-                        UI.navMenu.innerHTML = menuItems.map((item) => (item.type === "divider" ? '<li class="pt-2"></li>' : renderLink(item))).join("");
-                        UI.navOther.innerHTML = otherItems.map(renderLink).join("");
-                        this.renderUsageCard();
-                    },
-                    renderUsageCard() {
-                        const stats = API.getStorageStats();
-                        const usedGB = 100; //(stats.totalSize / (1024 * 1024 * 1024)).toFixed(1);
-                        const totalGB = (stats.totalQuota / (1024 * 1024 * 1024)).toFixed(0);
-
-                        const totalSegments = 20;
-                        const filledSegments = 10; //Math.round(stats.usage * totalSegments);
-                        const greenShades = ["#2DD4BF", "#26C3B1", "#20B2A3", "#1AA195", "#159087", "#107F7A"];
-                        let segmentsHTML = "";
-                        for (let i = 0; i < totalSegments; i++) {
-                            const color = i < filledSegments ? greenShades[i % greenShades.length] : "#E5E7EB";
-                            segmentsHTML += `<div class="h-[32px] w-full rounded-full" style="background-color: ${color};"></div>`;
-                        }
-
-                        UI.usageCardContainer.innerHTML = `
-                    <div class="w-full bg-white rounded-[14px] border border-gray-100 p-4 shadow-[0_8px_24px_rgba(0,0,0,0.04)]">
-                        <div class="flex flex-col">
-                            <div class="flex justify-between items-center mb-1">
-                                <h2 class="text-base font-bold text-gray-900">Usage</h2>
-                                <span class="text-xs font-medium text-gray-500">${usedGB}/${totalGB} GB</span>
-                            </div>
-                            <p class="text-xs text-gray-500 leading-relaxed mb-4">Upgrade your plan for more space.</p>
-                            <div class="flex items-center space-x-1 mb-4">${segmentsHTML}</div>
-                            <button class="w-full bg-white text-gray-700 font-semibold text-xs py-2 px-3 rounded-[10px] border border-gray-200 hover:bg-gray-50 active:scale-[0.98] transition-all duration-150 shadow-sm">Go Unlimited</button>
-                        </div>
-                    </div>`;
-                    },
-                    renderHeader() {
-                        const path = State.currentPathId && API.getPath(State.currentPathId) ? API.getPath(State.currentPathId) : [];
-                        const breadcrumbItems = [{ id: null, name: "Dashboard" }, ...path];
-                        UI.breadcrumbs.innerHTML =
-                            State.currentPathId && !API.getItem(State.currentPathId)
-                                ? `<span class="font-semibold text-slate-700">${document.querySelector(`.nav-item[data-path-id="${State.currentPathId}"] span`).textContent}</span>`
-                                : breadcrumbItems
-                                      .map(
-                                          (item, index) =>
-                                              `${index > 0 ? `<i class="fa-solid fa-chevron-right text-slate-300 text-xs"></i>` : ""}<a href="#" data-path-id="${
-                                                  item.id
-                                              }" class="breadcrumb-link px-1 py-0.5 rounded hover:bg-slate-100 transition-colors ${
-                                                  index === breadcrumbItems.length - 1 ? "font-semibold text-slate-800 pointer-events-none" : "text-slate-500 hover:text-slate-700"
-                                              }">${item.name}</a>`
-                                      )
-                                      .join("");
-
-                        UI.viewControls.innerHTML = `
-                            <button data-view="list" class="view-toggle-btn p-2 rounded-lg transition-all ${
-                                State.currentView === "list" ? "bg-white shadow-sm text-blue-600" : "text-slate-400 hover:text-slate-600"
-                            }" title="List View">
-                                <i class="fa-solid fa-list fa-fw"></i>
-                            </button>
-                            <button data-view="grid" class="view-toggle-btn p-2 rounded-lg transition-all ${
-                                State.currentView === "grid" ? "bg-white shadow-sm text-blue-600" : "text-slate-400 hover:text-slate-600"
-                            }" title="Grid View">
-                                <i class="fa-solid fa-th-large fa-fw"></i>
-                            </button>`;
-                    },
-                    renderFiles() {
-                        const items = State.currentPathId === "recent" ? API.getRecentItems() : API.getItemsInCurrentPath();
-                        items.sort((a, b) => {
-                            const c = a[State.sortBy.key],
-                                d = b[State.sortBy.key];
-                            let e = 0;
-                            return (
-                                "string" == typeof c ? (e = c.localeCompare(d)) : (e = c - d),
-                                "folder" === a.type && "folder" !== b.type ? -1 : "folder" !== a.type && "folder" === b.type ? 1 : "asc" === State.sortBy.order ? e : -e
-                            );
-                        });
-
-                        const titleMap = {
-                            null: "Dashboard",
-                            recent: "Recent files",
-                            favorites: "Favorites",
-                            documents: "Documents",
-                            images: "Images",
-                            videos: "Videos",
-                            audios: "Audios",
-                            trash: "Deleted files",
-                        };
-                        const currentFolder = API.getItem(State.currentPathId);
-                        UI.currentFolderTitle.textContent = State.currentSearchQuery ? `Search results` : currentFolder ? currentFolder.name : titleMap[State.currentPathId];
-                        UI.quickAccessContainer.style.display = State.currentPathId === null && !State.currentSearchQuery ? "block" : "none";
-                        if (State.currentPathId === null && !State.currentSearchQuery) this.renderQuickAccess();
-
-                        if (items.length === 0) {
-                            UI.fileContainer.innerHTML = `<div class="text-center py-20"><i class="fa-solid fa-ghost fa-3x text-slate-300"></i><p class="mt-4 text-slate-500">${
-                                State.currentSearchQuery ? "No results found" : "This folder is empty"
-                            }</p></div>`;
-                            UI.fileContainerHeader.classList.add("hidden");
-                            return;
-                        }
-
-                        if (State.currentView === "grid") {
-                            UI.fileContainer.className = "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-4";
-                            UI.fileContainerHeader.classList.add("hidden");
-                            UI.fileContainer.innerHTML = items.map(this.renderGridItem).join("");
-                        } else {
-                            UI.fileContainer.className = "flex flex-col";
-                            UI.fileContainerHeader.classList.remove("hidden");
-                            this.renderListHeader();
-                            UI.fileContainer.innerHTML = items.map(this.renderListItem).join("");
-                        }
-                    },
-                    renderQuickAccess() {
-                        /* Logic similar to previous version, slightly simplified */ const recentItems = API.getRecentItems();
-                        UI.quickAccessContainer.innerHTML =
-                            recentItems.length === 0
-                                ? ""
-                                : `<h2 class="text-xl font-semibold text-slate-700 mb-4">Quick Access</h2><div class="grid grid-cols-2 md:grid-cols-4 gap-4">${recentItems
-                                      .map((item) => {
-                                          const { icon, color } = Helpers.getIconForType(item.type);
-                                          return `<div data-id="${
-                                              item.id
-                                          }" class="file-item bg-white p-4 rounded-lg shadow-sm border border-transparent hover:border-blue-500 hover:shadow-md transition-all-fast cursor-pointer flex items-center gap-4 select-none"><i class="fa-solid ${icon} ${color} fa-2x"></i><div class="overflow-hidden"><p class="font-medium text-slate-700 truncate">${
-                                              item.name
-                                          }</p><p class="text-xs text-slate-500">${Helpers.formatDate(item.dateModified)}</p></div></div>`;
-                                      })
-                                      .join("")}</div>`;
-                    },
-                    renderGridItem(item) {
-                        const { icon, color } = Helpers.getIconForType(item.type);
-                        const isSelected = State.selectedItemIds.has(item.id);
-                        const baseClasses = "file-item flex flex-col items-center justify-center p-4 rounded-xl text-center cursor-pointer transition-all duration-200 border-2 select-none";
-                        const selectedClasses = "bg-blue-50 border-blue-500 shadow-md hover:bg-blue-100";
-                        const unselectedClasses = "bg-white border-transparent hover:bg-slate-50 hover:border-slate-200 hover:shadow-sm";
-                        return `<div data-id="${item.id}" data-type="${item.type}" class="${baseClasses} ${
-                            isSelected ? selectedClasses : unselectedClasses
-                        }"><i class="fa-solid ${icon} ${color} fa-4x mb-3"></i><span class="font-medium text-sm text-slate-700 break-words w-full truncate">${item.name}</span></div>`;
-                    },
-                    renderListItem(item) {
-                        const { icon, color } = Helpers.getIconForType(item.type);
-                        const isSelected = State.selectedItemIds.has(item.id);
-                        const baseClasses = "file-item grid grid-cols-12 items-center gap-4 px-4 py-3 rounded-lg cursor-pointer transition-all duration-200 select-none border-l-4";
-                        const selectedClasses = "bg-blue-50 border-l-blue-500 hover:bg-blue-100";
-                        const unselectedClasses = "bg-white border-l-transparent hover:bg-slate-50 hover:border-l-slate-300";
-                        return `<div data-id="${item.id}" data-type="${item.type}" class="${baseClasses} ${
-                            isSelected ? selectedClasses : unselectedClasses
-                        }"><div class="col-span-12 md:col-span-5 flex items-center gap-4"><i class="fa-solid ${icon} ${color} fa-lg w-5 text-center"></i><span class="font-medium text-sm text-slate-700 truncate">${
-                            item.name
-                        }</span></div><div class="col-span-6 md:col-span-3 text-sm text-slate-500">${Helpers.formatDate(
-                            item.dateModified
-                        )}</div><div class="col-span-6 md:col-span-2 text-sm text-slate-500">${
-                            item.type !== "folder" ? Helpers.formatBytes(item.size) : "--"
-                        }</div><div class="hidden md:block col-span-2 text-sm text-slate-500">${item.owner}</div></div>`;
-                    },
-                    renderListHeader() {
-                        /* Logic unchanged from previous version */ const sortIcon = (key) => {
-                            if (State.sortBy.key === key) {
-                                return State.sortBy.order === "asc" ? "fa-arrow-up" : "fa-arrow-down";
-                            }
-                            return "fa-sort";
-                        };
-                        UI.fileContainerHeader.innerHTML = `<div class="grid grid-cols-12 items-center gap-4 px-4 py-2 text-xs font-semibold text-slate-500 uppercase border-b border-slate-200 mb-2"><div data-sort-key="name" class="col-span-12 md:col-span-5 sortable-header cursor-pointer">Name <i class="fa-solid ${sortIcon(
-                            "name"
-                        )}"></i></div><div data-sort-key="dateModified" class="col-span-6 md:col-span-3 sortable-header cursor-pointer">Date Modified <i class="fa-solid ${sortIcon(
-                            "dateModified"
-                        )}"></i></div><div data-sort-key="size" class="col-span-6 md:col-span-2 sortable-header cursor-pointer">Size <i class="fa-solid ${sortIcon(
-                            "size"
-                        )}"></i></div><div class="hidden md:block col-span-2">Owner</div></div>`;
-                    },
-                    updateSelectionVisuals() {
-                        document.querySelectorAll(".file-item").forEach((el) => {
-                            const isSelected = State.selectedItemIds.has(el.dataset.id);
-
-                            if (State.currentView === "grid") {
-                                // Grid view classes
-                                if (isSelected) {
-                                    el.classList.remove("bg-white", "border-transparent", "hover:bg-slate-50", "hover:border-slate-200", "hover:shadow-sm");
-                                    el.classList.add("bg-blue-50", "border-blue-500", "shadow-md", "hover:bg-blue-100");
-                                } else {
-                                    el.classList.remove("bg-blue-50", "border-blue-500", "shadow-md", "hover:bg-blue-100");
-                                    el.classList.add("bg-white", "border-transparent", "hover:bg-slate-50", "hover:border-slate-200", "hover:shadow-sm");
-                                }
-                            } else {
-                                // List view classes
-                                if (isSelected) {
-                                    el.classList.remove("bg-white", "border-l-transparent", "hover:bg-slate-50", "hover:border-l-slate-300");
-                                    el.classList.add("bg-blue-50", "border-l-blue-500", "hover:bg-blue-100");
-                                } else {
-                                    el.classList.remove("bg-blue-50", "border-l-blue-500", "hover:bg-blue-100");
-                                    el.classList.add("bg-white", "border-l-transparent", "hover:bg-slate-50", "hover:border-l-slate-300");
-                                }
-                            }
-                        });
-                        this.renderPreviewPane();
-                    },
-                    renderPreviewPane() {
-                        if (!State.isPreviewPaneOpen) {
-                            UI.previewPane.classList.add("translate-x-full");
-                            return;
-                        }
-                        UI.previewPane.classList.remove("translate-x-full");
-
-                        if (State.selectedItemIds.size !== 1) {
-                            UI.previewPaneHeader.innerHTML = `
-                        <h3 class="font-semibold text-slate-600">Preview</h3>
-                        <button id="close-preview-pane" class="text-slate-500 hover:text-slate-800 p-2 rounded-full hover:bg-slate-100"><i class="fa-solid fa-xmark"></i></button>`;
-                            UI.previewPaneContent.innerHTML = `<div class="flex flex-col items-center justify-center h-full text-center text-slate-500"><i class="fa-solid fa-arrow-left fa-2x mb-4"></i><p>Select a single file to see its details and preview.</p></div>`;
-                            return;
-                        }
-
-                        const item = API.getItem([...State.selectedItemIds][0]);
-                        UI.previewPaneHeader.innerHTML = `
-                    <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-lg">
-                        <button data-tab="info" class="preview-tab-btn p-2 rounded-md text-sm ${
-                            State.activePreviewTab === "info" ? "bg-white shadow-sm text-blue-600" : "text-slate-500 hover:text-blue-600"
-                        }">Info</button>
-                        <button data-tab="preview" class="preview-tab-btn p-2 rounded-md text-sm ${
-                            State.activePreviewTab === "preview" ? "bg-white shadow-sm text-blue-600" : "text-slate-500 hover:text-blue-600"
-                        }">Preview</button>
-                        <button data-tab="raw" class="preview-tab-btn p-2 rounded-md text-sm ${
-                            State.activePreviewTab === "raw" ? "bg-white shadow-sm text-blue-600" : "text-slate-500 hover:text-blue-600"
-                        }">Raw</button>
-                    </div>
-                    <button id="close-preview-pane" class="text-slate-500 hover:text-slate-800 p-2 rounded-full hover:bg-slate-100"><i class="fa-solid fa-xmark"></i></button>`;
-
-                        let contentHTML = "";
-                        switch (State.activePreviewTab) {
-                            case "preview":
-                                if (["jpg", "png", "jpeg"].includes(item.type) && item.content) {
-                                    contentHTML = `<img src="${item.content}" alt="Preview of ${item.name}" class="w-full h-auto rounded-lg object-contain">`;
-                                } else if (item.type === "txt" && item.content) {
-                                    contentHTML = `<pre class="text-sm bg-slate-50 p-4 rounded-lg whitespace-pre-wrap font-mono">${item.content}</pre>`;
-                                } else {
-                                    const { icon, color } = Helpers.getIconForType(item.type);
-                                    contentHTML = `<div class="flex flex-col items-center justify-center h-full text-center text-slate-400"><i class="fa-solid ${icon} ${color} fa-6x mb-4"></i><p class="font-semibold">No preview available</p><p class="text-sm">Cannot preview this file type.</p></div>`;
-                                }
-                                break;
-                            case "raw":
-                                contentHTML = `<pre class="text-xs bg-slate-800 text-slate-200 p-4 rounded-lg whitespace-pre-wrap font-mono">${JSON.stringify(item, null, 2)}</pre>`;
-                                break;
-                            case "info":
-                            default:
-                                const { icon, color } = Helpers.getIconForType(item.type);
-                                contentHTML = `<div class="text-center mb-6"><i class="fa-solid ${icon} ${color} fa-5x"></i></div>
-                        <h4 class="font-bold text-lg break-words text-center">${item.name}</h4>
-                        <div class="space-y-3 mt-6 text-sm">
-                            <div class="font-semibold text-slate-600">Properties</div>
-                            <div class="flex justify-between"><span>Type</span> <span class="text-slate-500">${item.type.toUpperCase()}</span></div>
-                            <div class="flex justify-between"><span>Size</span> <span class="text-slate-500">${item.type !== "folder" ? Helpers.formatBytes(item.size) : "--"}</span></div>
-                            <div class="flex justify-between"><span>Owner</span> <span class="text-slate-500">${item.owner}</span></div>
-                            <div class="flex justify-between"><span>Modified</span> <span class="text-slate-500">${Helpers.formatDate(item.dateModified)}</span></div>
-                            <div class="flex justify-between"><span>Created</span> <span class="text-slate-500">${Helpers.formatDate(item.dateCreated)}</span></div>
-                        </div>`;
-                                break;
-                        }
-                        UI.previewPaneContent.innerHTML = contentHTML;
-                    },
-                    renderContextMenu(x, y, c) {
-                        /* Unchanged from previous version */ let m = [];
-                        const i = State.currentPathId === "trash";
-                        if (c.type === "background") {
-                            m = [
-                                { label: "New Folder", icon: "fa-folder-plus", action: "create-folder" },
-                                { label: "Upload Files", icon: "fa-upload", action: "upload-files" },
-                                { label: "Paste", icon: "fa-paste", action: "paste", disabled: State.clipboard.action === null },
-                            ];
-                        } else if (c.type === "item") {
-                            const t = [...State.selectedItemIds].map(API.getItem),
-                                e = t.length === 1,
-                                s = e && t[0].isFavorite;
-                            if (i) {
-                                m = [
-                                    { label: "Restore", icon: "fa-trash-arrow-up", action: "restore" },
-                                    { label: "Delete Permanently", icon: "fa-bomb", action: "delete-permanently", isDestructive: true },
-                                ];
-                            } else {
-                                m = [
-                                    { label: "Open", icon: "fa-folder-open", action: "open", disabled: !e || t[0].type !== "folder" },
-                                    { label: "Download", icon: "fa-download", action: "download" },
-                                    { label: s ? "Remove from Favorites" : "Add to Favorites", icon: s ? "fa-star-slash" : "fa-star", action: "toggle-favorite" },
-                                    { type: "divider" },
-                                    { label: "Share", icon: "fa-share-nodes", action: "share", disabled: !e },
-                                    { label: "Rename", icon: "fa-pen", action: "rename", disabled: !e },
-                                    { label: "Copy", icon: "fa-copy", action: "copy" },
-                                    { label: "Cut", icon: "fa-scissors", action: "cut" },
-                                    { label: "Move to...", icon: "fa-arrow-right-to-bracket", action: "move" },
-                                    { type: "divider" },
-                                    { label: "Delete", icon: "fa-trash", action: "delete", isDestructive: true },
-                                ];
-                            }
-                        }
-                        (UI.contextMenu.innerHTML = m
-                            .map((t) =>
-                                t.type === "divider"
-                                    ? '<div class="my-1 h-px bg-slate-200"></div>'
-                                    : `<a href="#" data-action="${t.action}" class="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 ${
-                                          t.isDestructive ? "hover:bg-red-50 hover:text-red-600" : "hover:bg-slate-100"
-                                      } ${t.disabled ? "opacity-50 cursor-not-allowed" : ""}"><i class="fa-solid ${t.icon} w-5 text-center"></i><span>${t.label}</span></a>`
-                            )
-                            .join("")),
-                            (UI.contextMenu.style.left = `${x}px`),
-                            (UI.contextMenu.style.top = `${y}px`),
-                            UI.contextMenu.classList.remove("hidden");
-                        const a = UI.contextMenu.getBoundingClientRect();
-                        a.right > window.innerWidth && (UI.contextMenu.style.left = `${x - a.width}px`), a.bottom > window.innerHeight && (UI.contextMenu.style.top = `${y - a.height}px`);
-                    },
-                    hideContextMenu() {
-                        UI.contextMenu.classList.add("hidden");
-                    },
-                    showModal(t, e, s) {
-                        (UI.modalTitle.innerHTML = t), (UI.modalBody.innerHTML = e), (UI.modalFooter.innerHTML = s), UI.modalOverlay.classList.remove("hidden");
-                    },
-                    hideModal() {
-                        UI.modalOverlay.classList.add("hidden");
-                    },
-                };
-
-                // --- 7. EVENT HANDLERS & LOGIC ---
-                const Handlers = {
-                    init() {
-                        document.body.addEventListener("click", this.onGlobalClick.bind(this));
-                        document.body.addEventListener("contextmenu", this.onContextMenu.bind(this));
-                        document.addEventListener("keydown", this.onKeyDown.bind(this));
-                        UI.fileContainer.addEventListener("mousedown", this.onFileContainerMouseDown.bind(this));
-                        UI.header.addEventListener("click", this.onHeaderClick.bind(this));
-                        UI.sidebar.addEventListener("click", this.onSidebarClick.bind(this));
-                        UI.previewPane.addEventListener("click", this.onPreviewPaneClick.bind(this));
-                        UI.modalOverlay.addEventListener("click", this.onModalClick.bind(this));
-                        UI.contextMenu.addEventListener("click", this.onContextMenuClick.bind(this));
-                        const dropZone = document.body;
-                        dropZone.addEventListener("dragenter", this.onDragEnter.bind(this));
-                        UI.dragOverlay.addEventListener("dragleave", this.onDragLeave.bind(this));
-                        UI.dragOverlay.addEventListener("dragover", (e) => e.preventDefault());
-                        UI.dragOverlay.addEventListener("drop", this.onDrop.bind(this));
-                    },
-                    onGlobalClick(e) {
-                        this.constructor.name; // Keep `this` bound
-                        Renderer.hideContextMenu();
-                        if (!e.target.closest(".file-item, #preview-pane, #modal-overlay, #context-menu, .breadcrumb-link, .nav-item")) {
-                            State.clearSelection();
-                            // Auto-close preview pane when selection is cleared
-                            if (State.isPreviewPaneOpen) {
-                                State.closePreviewPane();
-                                Renderer.renderHeader();
-                                Renderer.renderPreviewPane();
-                            }
-                            Renderer.updateSelectionVisuals();
-                        }
-                        if (window.innerWidth < 1024 && !UI.sidebar.contains(e.target) && !UI.menuToggleBtn.contains(e.target)) {
-                            UI.sidebar.classList.add("max-lg:-translate-x-full");
-                        }
-                    },
-                    onSidebarClick(e) {
-                        const navLink = e.target.closest(".nav-item");
-                        if (navLink && !navLink.classList.contains("nav-active")) {
-                            e.preventDefault();
-                            State.setCurrentPathId(navLink.dataset.pathId === "null" ? null : navLink.dataset.pathId);
-                            State.currentSearchQuery = "";
-                            UI.searchInput.value = "";
-                            Renderer.renderAll();
-                        }
-                    },
-                    onHeaderClick(e) {
-                        const breadcrumb = e.target.closest(".breadcrumb-link");
-                        const viewToggle = e.target.closest(".view-toggle-btn");
-                        const previewToggle = e.target.closest("#preview-toggle-btn");
-                        const menuToggle = e.target.closest("#menu-toggle-btn");
-                        const uploadBtn = e.target.closest("#upload-btn");
-                        const newFolderBtn = e.target.closest("#new-folder-btn");
-
-                        if (breadcrumb) {
-                            e.preventDefault();
-                            State.setCurrentPathId(breadcrumb.dataset.pathId === "null" ? null : breadcrumb.dataset.pathId);
-                            Renderer.renderAll();
-                        }
-                        if (viewToggle) {
-                            State.setView(viewToggle.dataset.view);
-                            Renderer.renderHeader();
-                            Renderer.renderFiles();
-                        }
-                        if (previewToggle) {
-                            State.togglePreviewPane();
-                            Renderer.renderHeader();
-                            Renderer.renderPreviewPane();
-                        }
-                        if (menuToggle) {
-                            UI.sidebar.classList.toggle("max-lg:-translate-x-full");
-                        }
-                        if (uploadBtn) {
-                            this.triggerFileUpload();
-                        }
-                        if (newFolderBtn) {
-                            this.showCreateFolderModal();
-                        }
-                    },
-                    onFileItemClick(e) {
-                        const itemEl = e.target.closest(".file-item");
-                        if (!itemEl) return;
-                        const id = itemEl.dataset.id;
-                        if (e.ctrlKey || e.metaKey) {
-                            State.toggleSelection(id);
-                        } else if (e.shiftKey) {
-                            const i = Array.from(UI.fileContainer.querySelectorAll(".file-item")).map((el) => el.dataset.id),
-                                l = [...State.selectedItemIds].pop(),
-                                s = i.indexOf(l),
-                                c = i.indexOf(id),
-                                t = Math.min(s, c),
-                                n = Math.max(s, c);
-                            State.setSelection([...State.selectedItemIds, ...i.slice(t, n + 1)]);
-                        } else {
-                            State.setSelection([id]);
-                        }
-
-                        // Auto-open preview pane when a FILE (not folder) is selected, auto-close when nothing is selected
-                        if (State.selectedItemIds.size > 0 && !State.isPreviewPaneOpen) {
-                            // Check if any selected item is a file (not a folder)
-                            const selectedItems = [...State.selectedItemIds].map((id) => API.getItem(id));
-                            const hasFileSelected = selectedItems.some((item) => item && item.type !== "folder");
-                            if (hasFileSelected) {
-                                State.openPreviewPane();
-                                Renderer.renderHeader();
-                            }
-                        } else if (State.selectedItemIds.size === 0 && State.isPreviewPaneOpen) {
-                            State.closePreviewPane();
-                            Renderer.renderHeader();
-                        }
-
-                        Renderer.updateSelectionVisuals();
-                    },
-                    onFileItemDoubleClick(e) {
-                        const itemEl = e.target.closest(".file-item");
-                        if (!itemEl) return;
-                        const item = API.getItem(itemEl.dataset.id);
-                        if (item.type === "folder" && State.currentPathId !== "trash") {
-                            State.setCurrentPathId(item.id);
-                            Renderer.renderAll();
-                        }
-                    },
-                    onFileContainerMouseDown(e) {
-                        const itemEl = e.target.closest(".file-item");
-                        let clickTimeout = setTimeout(() => this.onFileItemClick(e), 200);
-                        itemEl?.addEventListener(
-                            "dblclick",
-                            () => {
-                                clearTimeout(clickTimeout);
-                                this.onFileItemDoubleClick(e);
-                            },
-                            { once: true }
-                        );
-
-                        if (!itemEl && e.button === 0) {
-                            const startX = e.clientX,
-                                startY = e.clientY;
-                            UI.selectionBox.style.left = `${startX}px`;
-                            UI.selectionBox.style.top = `${startY}px`;
-                            UI.selectionBox.style.width = "0px";
-                            UI.selectionBox.style.height = "0px";
-                            UI.selectionBox.classList.remove("hidden");
-                            const onMouseMove = (moveE) => {
-                                const x = Math.min(startX, moveE.clientX),
-                                    y = Math.min(startY, moveE.clientY),
-                                    w = Math.abs(moveE.clientX - startX),
-                                    h = Math.abs(moveE.clientY - startY);
-                                UI.selectionBox.style.left = `${x}px`;
-                                UI.selectionBox.style.top = `${y}px`;
-                                UI.selectionBox.style.width = `${w}px`;
-                                UI.selectionBox.style.height = `${h}px`;
-                                const s = UI.selectionBox.getBoundingClientRect(),
-                                    n = new Set();
-                                document.querySelectorAll(".file-item").forEach((el) => {
-                                    const r = el.getBoundingClientRect();
-                                    if (s.left < r.right && s.right > r.left && s.top < r.bottom && s.bottom > r.top) n.add(el.dataset.id);
-                                });
-                                State.setSelection([...n]);
-                                Renderer.updateSelectionVisuals();
-                            };
-                            const onMouseUp = () => {
-                                UI.selectionBox.classList.add("hidden");
-                                document.removeEventListener("mousemove", onMouseMove);
-                                document.removeEventListener("mouseup", onMouseUp);
-                            };
-                            document.addEventListener("mousemove", onMouseMove);
-                            document.addEventListener("mouseup", onMouseUp);
-                        }
-                    },
-                    onPreviewPaneClick(e) {
-                        // Stop propagation to prevent global click handler from closing the pane
-                        e.stopPropagation();
-
-                        if (e.target.closest("#close-preview-pane")) {
-                            if (State.isPreviewPaneOpen) {
-                                State.closePreviewPane();
-                                Renderer.renderHeader();
-                                Renderer.renderPreviewPane();
-                            }
-                        }
-                        const tabBtn = e.target.closest(".preview-tab-btn");
-                        if (tabBtn) {
-                            e.preventDefault();
-                            State.setActivePreviewTab(tabBtn.dataset.tab);
-                            Renderer.renderPreviewPane();
-                        }
-                    },
-                    onContextMenu(e) {
-                        e.preventDefault();
-                        const itemEl = e.target.closest(".file-item");
-                        let context;
-                        if (itemEl) {
-                            const id = itemEl.dataset.id;
-                            if (!State.selectedItemIds.has(id)) {
-                                State.setSelection([id]);
-                                Renderer.updateSelectionVisuals();
-                            }
-                            context = { type: "item", id };
-                        } else {
-                            context = { type: "background" };
-                        }
-                        Renderer.renderContextMenu(e.clientX, e.clientY, context);
-                    },
-                    onContextMenuClick(e) {
-                        const t = e.target.closest("[data-action]");
-                        if (!t || t.classList.contains("opacity-50")) return;
-                        const s = t.dataset.action,
-                            i = State.selectedItemIds;
-                        switch (s) {
-                            case "create-folder":
-                                this.showCreateFolderModal();
-                                break;
-                            case "upload-files":
-                                this.triggerFileUpload();
-                                break;
-                            case "download":
-                                this.downloadItems(i);
-                                break;
-                            case "toggle-favorite":
-                                API.toggleFavorite(i), Renderer.renderFiles();
-                                break;
-                            case "rename":
-                                this.showRenameModal([...i][0]);
-                                break;
-                            case "share":
-                                this.showShareModal([...i][0]);
-                                break;
-                            case "copy":
-                                (State.clipboard = { action: "copy", itemIds: new Set(i) }), Helpers.showNotification(`${i.size} item(s) copied.`);
-                                break;
-                            case "cut":
-                                (State.clipboard = { action: "move", itemIds: new Set(i) }), Helpers.showNotification(`${i.size} item(s) cut.`);
-                                break;
-                            case "paste":
-                                State.clipboard.action &&
-                                    ("copy" === State.clipboard.action
-                                        ? API.copyItems(State.clipboard.itemIds, State.currentPathId)
-                                        : "move" === State.clipboard.action && (API.moveItems(State.clipboard.itemIds, State.currentPathId), (State.clipboard = { action: null, itemIds: new Set() })),
-                                    Renderer.renderFiles());
-                                break;
-                            case "delete":
-                                API.trashItems(i), State.clearSelection(), Renderer.renderAll(), Helpers.showNotification(`${i.size} item(s) moved to Trash.`);
-                                break;
-                            case "restore":
-                                API.restoreItems(i), State.clearSelection(), Renderer.renderAll(), Helpers.showNotification(`${i.size} item(s) restored.`);
-                                break;
-                            case "delete-permanently":
-                                confirm(`Are you sure you want to permanently delete ${i.size} item(s)? This action cannot be undone.`) &&
-                                    (API.deletePermanently(i), State.clearSelection(), Renderer.renderAll(), Helpers.showNotification(`${i.size} item(s) permanently deleted.`));
-                        }
-                        Renderer.hideContextMenu();
-                    },
-                    onModalClick(e) {
-                        if (e.target === UI.modalOverlay || e.target.closest(".modal-close-btn")) Renderer.hideModal();
-                        const t = UI.modalBody.querySelector("form");
-                        e.target.closest("#modal-submit-btn") && t && t.dispatchEvent(new Event("submit", { cancelable: !0, bubbles: !0 }));
-                    },
-                    onKeyDown(e) {
-                        if ("INPUT" === e.target.tagName || "TEXTAREA" === e.target.tagName) return;
-                        if ("Escape" === e.key) {
-                            Renderer.hideContextMenu(), Renderer.hideModal();
-                            if (State.isPreviewPaneOpen) {
-                                State.togglePreviewPane();
-                                Renderer.renderHeader();
-                                Renderer.renderPreviewPane();
-                            }
-                        }
-                        if (("Delete" === e.key || "Backspace" === e.key) && State.selectedItemIds.size > 0) {
-                            "trash" === State.currentPathId
-                                ? confirm(`Are you sure you want to permanently delete ${State.selectedItemIds.size} item(s)?`) &&
-                                  (API.deletePermanently(State.selectedItemIds), Helpers.showNotification("Permanently deleted."))
-                                : (API.trashItems(State.selectedItemIds), Helpers.showNotification("Moved to trash.")),
-                                State.clearSelection(),
-                                Renderer.renderAll();
-                        }
-                        if ((e.ctrlKey || e.metaKey) && "a" === e.key) {
-                            e.preventDefault();
-                            const t = API.getItemsInCurrentPath().map((t) => t.id);
-                            State.setSelection(t), Renderer.updateSelectionVisuals();
-                        }
-                        if ((e.ctrlKey || e.metaKey) && "c" === e.key)
-                            (State.clipboard = { action: "copy", itemIds: new Set(State.selectedItemIds) }), Helpers.showNotification(`${State.selectedItemIds.size} item(s) copied.`);
-                        if ((e.ctrlKey || e.metaKey) && "x" === e.key)
-                            (State.clipboard = { action: "move", itemIds: new Set(State.selectedItemIds) }), Helpers.showNotification(`${State.selectedItemIds.size} item(s) cut.`);
-                        if ((e.ctrlKey || e.metaKey) && "v" === e.key && State.clipboard.action) {
-                            "copy" === State.clipboard.action
-                                ? API.copyItems(State.clipboard.itemIds, State.currentPathId)
-                                : "move" === State.clipboard.action && (API.moveItems(State.clipboard.itemIds, State.currentPathId), (State.clipboard.action = null)),
-                                Renderer.renderFiles();
-                        }
-                    },
-                    showCreateFolderModal() {
-                        Renderer.showModal(
-                            "Create New Folder",
-                            `<form id="create-folder-form"><label for="folder-name-input" class="block text-sm font-medium text-slate-700 mb-1">Folder Name</label><input type="text" id="folder-name-input" class="w-full border border-slate-300 rounded-lg p-2 focus-ring" required autofocus></form>`,
-                            `<button class="modal-close-btn px-4 py-2 text-sm font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 focus-ring">Cancel</button><button id="modal-submit-btn" class="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus-ring">Create</button>`
-                        );
-                        document.getElementById("create-folder-form").addEventListener("submit", (e) => {
-                            e.preventDefault();
-                            const t = document.getElementById("folder-name-input");
-                            t.value.trim() && (API.createFolder(t.value.trim(), State.currentPathId), Renderer.renderFiles(), Renderer.hideModal());
-                        });
-                    },
-                    showRenameModal(t) {
-                        const e = API.getItem(t);
-                        Renderer.showModal(
-                            "Rename Item",
-                            `<form id="rename-form"><input type="text" id="rename-input" value="${e.name}" class="w-full border border-slate-300 rounded-lg p-2 focus-ring" required autofocus></form>`,
-                            `<button class="modal-close-btn px-4 py-2 text-sm font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 focus-ring">Cancel</button><button id="modal-submit-btn" class="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus-ring">Save</button>`
-                        );
-                        document.getElementById("rename-form").addEventListener("submit", (e) => {
-                            e.preventDefault();
-                            const s = document.getElementById("rename-input").value.trim();
-                            s && (API.renameItem(t, s), Renderer.renderAll(), Renderer.hideModal());
-                        });
-                    },
-                    showShareModal(t) {
-                        const e = API.getItem(t);
-                        Renderer.showModal(
-                            `Share "${e.name}"`,
-                            `<div class="space-y-4"><div><label for="share-email" class="block text-sm font-medium text-slate-700 mb-1">Add people</label><input type="email" id="share-email" placeholder="Enter email address" class="w-full border border-slate-300 rounded-lg p-2 focus-ring"></div><div><label for="share-permissions" class="block text-sm font-medium text-slate-700 mb-1">Permissions</label><select id="share-permissions" class="w-full border border-slate-300 rounded-lg p-2 bg-white focus-ring"><option value="view">Can View</option><option value="edit">Can Edit</option></select></div><div class="border-t border-slate-200 pt-4"><p class="text-sm font-medium text-slate-700 mb-1">Or share a link</p><div class="flex items-center gap-2 mt-2"><input type="text" readonly value="https://docuvault.com/s/${Helpers.generateId()}" class="w-full bg-slate-100 border border-slate-300 rounded-lg p-2 text-slate-500 text-sm"><button id="copy-link-btn" class="px-3 py-2 text-sm font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 focus-ring"><i class="fa-solid fa-copy"></i></button></div></div></div>`,
-                            `<button class="modal-close-btn px-4 py-2 text-sm font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 focus-ring">Done</button><button id="modal-submit-btn" class="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus-ring">Share</button>`
-                        );
-                        document.getElementById("copy-link-btn").addEventListener("click", () => {
-                            Helpers.showNotification("Link copied to clipboard!");
-                        });
-                    },
-                    triggerFileUpload() {
-                        const t = document.createElement("input");
-                        (t.type = "file"),
-                            (t.multiple = !0),
-                            (t.onchange = (e) => {
-                                API.uploadFiles(e.target.files, State.currentPathId), Renderer.renderFiles(), Helpers.showNotification(`${e.target.files.length} file(s) uploaded.`);
-                            }),
-                            t.click();
-                    },
-                    downloadItems(t) {
-                        t.size === 1 ? Helpers.showNotification(`Downloading ${API.getItem([...t][0]).name}...`) : Helpers.showNotification(`Zipping and downloading ${t.size} items...`);
-                    },
-                    onDragEnter(e) {
-                        e.preventDefault(), e.stopPropagation(), UI.dragOverlay.classList.remove("hidden");
-                    },
-                    onDragLeave(e) {
-                        e.preventDefault(), e.stopPropagation(), null === e.relatedTarget && UI.dragOverlay.classList.add("hidden");
-                    },
-                    onDrop(e) {
-                        e.preventDefault(), e.stopPropagation(), UI.dragOverlay.classList.add("hidden");
-                        const t = e.dataTransfer.files;
-                        t.length > 0 && (API.uploadFiles(t, State.currentPathId), Renderer.renderFiles(), Helpers.showNotification(`${t.length} file(s) uploaded.`));
-                    },
-                };
-
-                // --- 8. INITIALIZATION ---
-                function init() {
-                    Handlers.init();
-                    UI.searchInput.addEventListener("keyup", (e) => {
-                        State.currentSearchQuery = e.target.value;
-                        if (!State.currentSearchQuery) State.currentPathId = null;
-                        Renderer.renderAll();
-                    });
-                    UI.fileContainer.addEventListener("click", (e) => {
-                        const s = e.target.closest(".sortable-header");
-                        if (s) {
-                            State.setSort(s.dataset.sortKey);
-                            Renderer.renderFiles();
-                        }
-                    });
-                    Renderer.renderAll();
+            @theme inline {
+                --color-background: var(--background);
+                --color-foreground: var(--foreground);
+                --color-card: var(--card);
+                --color-card-foreground: var(--card-foreground);
+                --color-popover: var(--popover);
+                --color-popover-foreground: var(--popover-foreground);
+                --color-primary: var(--primary);
+                --color-primary-foreground: var(--primary-foreground);
+                --color-secondary: var(--secondary);
+                --color-secondary-foreground: var(--secondary-foreground);
+                --color-muted: var(--muted);
+                --color-muted-foreground: var(--muted-foreground);
+                --color-accent: var(--accent);
+                --color-accent-foreground: var(--accent-foreground);
+                --color-destructive: var(--destructive);
+                --color-border: var(--border);
+                --color-input: var(--input);
+                --color-ring: var(--ring);
+                --color-sidebar: var(--sidebar);
+                --color-sidebar-foreground: var(--sidebar-foreground);
+                --color-sidebar-primary: var(--sidebar-primary);
+                --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+                --color-sidebar-accent: var(--sidebar-accent);
+                --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+                --color-sidebar-border: var(--sidebar-border);
+                --color-sidebar-ring: var(--sidebar-ring);
+                --radius-sm: calc(var(--radius) - 4px);
+                --radius-md: calc(var(--radius) - 2px);
+                --radius-lg: var(--radius);
+                --radius-xl: calc(var(--radius) + 4px);
+                --animate-caret-blink: caret-blink 1.25s ease-out infinite;
+                @keyframes caret-blink {
+                    0%, 70%, 100% { opacity: 1; }
+                    20%, 50% { opacity: 0; }
                 }
+            }
+            :root {
+                --radius: 0.75rem;
+                --background: #fafafa;
+                --foreground: #18181b;
+                --card: #ffffff;
+                --card-foreground: #18181b;
+                --popover: #ffffff;
+                --popover-foreground: #18181b;
+                --primary: #6d28d9;
+                --primary-foreground: #fafafa;
+                --secondary: #f4f4f5;
+                --secondary-foreground: #18181b;
+                --muted: #f4f4f5;
+                --muted-foreground: #71717a;
+                --accent: #f4f4f5;
+                --accent-foreground: #18181b;
+                --destructive: #ef4444;
+                --destructive-foreground: #fafafa;
+                --border: #e4e4e7;
+                --input: #e4e4e7;
+                --ring: #6d28d9;
+                --sidebar: #ffffff;
+                --sidebar-foreground: #18181b;
+                --sidebar-primary: #6d28d9;
+                --sidebar-primary-foreground: #fafafa;
+                --sidebar-accent: #f4f4f5;
+                --sidebar-accent-foreground: #18181b;
+                --sidebar-border: #e4e4e7;
+                --sidebar-ring: #6d28d9;
+            }
+            .dark {
+                --background: #09090b;
+                --foreground: #fafafa;
+                --card: #09090b;
+                --card-foreground: #fafafa;
+                --popover: #09090b;
+                --popover-foreground: #fafafa;
+                --primary: #a78bfa;
+                --primary-foreground: #09090b;
+                --secondary: #27272a;
+                --secondary-foreground: #fafafa;
+                --muted: #27272a;
+                --muted-foreground: #a1a1aa;
+                --accent: #27272a;
+                --accent-foreground: #fafafa;
+                --destructive: #7f1d1d;
+                --destructive-foreground: #fafafa;
+                --border: #27272a;
+                --input: #27272a;
+                --ring: #a78bfa;
+                --sidebar: #09090b;
+                --sidebar-foreground: #fafafa;
+                --sidebar-primary: #a78bfa;
+                --sidebar-primary-foreground: #09090b;
+                --sidebar-accent: #27272a;
+                --sidebar-accent-foreground: #fafafa;
+                --sidebar-border: #27272a;
+                --sidebar-ring: #a78bfa;
+            }
+            * { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+            *::-webkit-scrollbar { width: 6px; height: 6px; }
+            *::-webkit-scrollbar-track { background: transparent; }
+            *::-webkit-scrollbar-thumb { background-color: var(--border); border-radius: 9999px; }
+            *::-webkit-scrollbar-thumb:hover { background-color: var(--muted-foreground); }
+            .no-scrollbar::-webkit-scrollbar { display: none; }
+            .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+            .typing-cursor::after {
+                content: "▋";
+                display: inline-block;
+                vertical-align: bottom;
+                animation: caret-blink 1s step-end infinite;
+                color: var(--primary);
+                font-size: 0.8em;
+                margin-left: 2px;
+            }
+            .sidebar-overlay {
+                position: fixed; inset: 0;
+                background-color: rgba(0,0,0,0.5);
+                z-index: 40; opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.3s ease;
+            }
+            .sidebar-overlay.active { opacity: 1; pointer-events: auto; }
+            @media (max-width: 768px) {
+                .mobile-sidebar {
+                    position: fixed !important;
+                    top: 0; left: 0; height: 100vh;
+                    z-index: 50;
+                    transform: translateX(-100%);
+                    transition: transform 0.3s ease-in-out;
+                }
+                .mobile-sidebar.open { transform: translateX(0); }
+            }
+            /* Code block styling */
+            pre { background: var(--muted); border-radius: 0.5rem; padding: 1rem; overflow-x: auto; margin: 0.5rem 0; border: 1px solid var(--border); }
+            code { font-family: 'Fira Code', 'Courier New', monospace; font-size: 0.85em; }
+            pre code { background: none; padding: 0; }
+            :not(pre) > code { background: var(--muted); padding: 0.15em 0.4em; border-radius: 0.25rem; border: 1px solid var(--border); }
+            /* Gradient logo text */
+            .logo-gradient { background: linear-gradient(135deg, #7c3aed, #a855f7, #6366f1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+            /* Glow button */
+            .glow-btn { box-shadow: 0 0 20px rgba(109, 40, 217, 0.35); }
+            .dark .glow-btn { box-shadow: 0 0 20px rgba(167, 139, 250, 0.35); }
+            /* Welcome screen */
+            @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+            .float-anim { animation: float 3s ease-in-out infinite; }
+            /* Pulse dot */
+            @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:.3} }
+            .thinking-dot:nth-child(1){animation:pulse-dot 1.2s infinite 0s}
+            .thinking-dot:nth-child(2){animation:pulse-dot 1.2s infinite 0.2s}
+            .thinking-dot:nth-child(3){animation:pulse-dot 1.2s infinite 0.4s}
+            /* Prose styles */
+            .ai-prose h1,.ai-prose h2,.ai-prose h3{font-weight:600;margin:0.75rem 0 0.4rem;line-height:1.3}
+            .ai-prose h1{font-size:1.2em}.ai-prose h2{font-size:1.1em}.ai-prose h3{font-size:1em}
+            .ai-prose p{margin:0.4rem 0;line-height:1.7}
+            .ai-prose ul,.ai-prose ol{padding-left:1.4rem;margin:0.4rem 0}
+            .ai-prose li{margin:0.2rem 0;line-height:1.6}
+            .ai-prose strong{font-weight:600}
+            .ai-prose a{color:var(--primary);text-decoration:underline}
+            .ai-prose blockquote{border-left:3px solid var(--primary);padding-left:0.8rem;margin:0.5rem 0;color:var(--muted-foreground);font-style:italic}
+            .ai-prose table{width:100%;border-collapse:collapse;margin:0.5rem 0;font-size:0.9em}
+            .ai-prose th,.ai-prose td{border:1px solid var(--border);padding:0.4rem 0.7rem;text-align:left}
+            .ai-prose th{background:var(--muted);font-weight:600}
+            .ai-prose hr{border:none;border-top:1px solid var(--border);margin:0.8rem 0}
+        </style>
+        <script type="importmap">
+            {
+                "imports": {
+                    "react": "https://esm.sh/react@18.2.0",
+                    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+                    "lucide-react": "https://esm.sh/lucide-react@latest?deps=react@18.2.0",
+                    "esm-shadcn": "https://esm.sh/esm-shadcn@0.0.2?deps=react@18.2.0",
+                    "clsx": "https://esm.sh/clsx@2.1.0",
+                    "tailwind-merge": "https://esm.sh/tailwind-merge@2.2.1",
+                    "next-themes": "https://esm.sh/next-themes@latest?deps=react@18.2.0",
+                    "marked": "https://esm.sh/marked@9.1.6"
+                }
+            }
+        </script>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+    </head>
+    <body>
+        <div id="root"></div>
+        <!-- USE BABEL ONLY LIKE THIS. DO NOT MODIFY THIS IN ANY CASE -->
+        <script type="text/babel" data-type="module">
+            import React, { useState, useEffect, useRef, useCallback } from "react";
+            import { createRoot } from "react-dom/client";
+            import { ThemeProvider, useTheme } from "next-themes";
+            import { marked } from "marked";
+            import {
+                Send, Menu, Search, MessageSquare, Bookmark, Box, Plus, Settings,
+                Trash2, Archive, Maximize2, MoreHorizontal, RefreshCw, Copy, Share2,
+                CheckCircle2, ChevronRight, PanelLeft, PanelRight, Bot, User, Library,
+                Grid, X, Moon, Sun, Laptop, Command, GripVertical, Info, History,
+                Sparkles, ArrowUpRight, Mic, Paperclip, ChevronDown, Check, File,
+                ExternalLink, Pin, PinOff, Edit3, Zap, Globe, Brain, Code, Wand2,
+                ThumbsUp, ThumbsDown, StopCircle, AlertCircle
+            } from "lucide-react";
+            import {
+                Button, Card, Input, Separator, Avatar, AvatarFallback, AvatarImage,
+                ScrollArea, Textarea, Badge, Tooltip, TooltipContent, TooltipProvider,
+                TooltipTrigger, DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+                DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
+            } from "esm-shadcn";
+            import { clsx } from "clsx";
+            import { twMerge } from "tailwind-merge";
 
-                init();
-            });
+            function cn(...inputs) { return twMerge(clsx(inputs)); }
+
+            // Configure marked for safe HTML rendering
+            marked.setOptions({ breaks: true, gfm: true });
+
+            // ─── API CONFIG ───────────────────────────────────────────────────────────
+            const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
+            const MODEL = "llama-3.3-70b-versatile";
+            const HARDCODED_KEY = "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";
+            const SYSTEM_PROMPT = `You are oclxn, an advanced AI assistant created by Syed Haider Hussein and Syed Developers. You are helpful, intelligent, and concise. You can help with coding, writing, analysis, math, creative tasks, and much more. When writing code, always use proper markdown code blocks with the language specified. Format your responses with markdown for readability. Be conversational yet professional.`;
+
+            // ─── CALL GROQ API (streaming, OpenAI-compatible) ────────────────────────
+            async function callClaudeAPI(messages, onChunk, signal) {
+                const payload = {
+                    model: MODEL,
+                    max_tokens: 1024,
+                    stream: true,
+                    messages: [
+                        { role: "system", content: SYSTEM_PROMPT },
+                        ...messages.map(m => ({ role: m.role === "ai" ? "assistant" : "user", content: m.content }))
+                    ]
+                };
+                const res = await fetch(GROQ_API_URL, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${HARDCODED_KEY}`
+                    },
+                    body: JSON.stringify(payload),
+                    signal
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err?.error?.message || `API error ${res.status}`);
+                }
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder();
+                let fullText = "";
+                let buffer = "";
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split("\n");
+                    buffer = lines.pop();
+                    for (const line of lines) {
+                        if (!line.startsWith("data: ")) continue;
+                        const data = line.slice(6).trim();
+                        if (data === "[DONE]") continue;
+                        try {
+                            const json = JSON.parse(data);
+                            const delta = json.choices?.[0]?.delta?.content;
+                            if (delta) {
+                                fullText += delta;
+                                onChunk(fullText);
+                            }
+                        } catch (_) {}
+                    }
+                }
+                return fullText;
+            }
+
+            // ─── LOGO ─────────────────────────────────────────────────────────────────
+            const Logo = () => (
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
+                    <span className="text-white font-black text-xs tracking-tighter">OX</span>
+                </div>
+            );
+
+            // ─── SIDEBAR ITEM ─────────────────────────────────────────────────────────
+            const SidebarItem = ({ icon: Icon, label, shortcut, active, count, onClick }) => (
+                <button onClick={onClick} className={cn(
+                    "w-full flex items-center justify-between px-3 py-2.5 rounded-md transition-all duration-200 text-sm group",
+                    active ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                )}>
+                    <div className="flex items-center gap-3">
+                        <Icon className={cn("w-4 h-4", active ? "text-primary" : "text-muted-foreground group-hover:text-foreground")} />
+                        <span>{label}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        {count && <span className={cn("text-[10px] px-1.5 py-0.5 rounded-full font-semibold border",
+                            active ? "bg-background border-primary/20 text-primary" : "bg-muted border-transparent text-muted-foreground")}>{count}</span>}
+                        {shortcut && <span className="hidden group-hover:block text-[10px] bg-background border border-border px-1.5 py-0.5 rounded text-muted-foreground">{shortcut}</span>}
+                    </div>
+                </button>
+            );
+
+            // ─── HISTORY ITEM ─────────────────────────────────────────────────────────
+            const HistoryItem = ({ label, active, isPinned, onPin, onUnpin, onDelete, onClick }) => (
+                <div className="group relative">
+                    <button onClick={onClick} className={cn(
+                        "w-full text-left text-sm rounded-md px-3 py-2 pr-8 truncate transition-all",
+                        active ? "bg-accent text-accent-foreground font-medium" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    )}>{label}</button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <button className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-muted">
+                                <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
+                            </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                            {isPinned
+                                ? <DropdownMenuItem onClick={onUnpin}><PinOff className="w-4 h-4 mr-2" /> Unpin</DropdownMenuItem>
+                                : <DropdownMenuItem onClick={onPin}><Pin className="w-4 h-4 mr-2" /> Pin</DropdownMenuItem>}
+                            <DropdownMenuItem><Edit3 className="w-4 h-4 mr-2" /> Rename</DropdownMenuItem>
+                            <DropdownMenuItem><Archive className="w-4 h-4 mr-2" /> Archive</DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem className="text-destructive" onClick={onDelete}><Trash2 className="w-4 h-4 mr-2" /> Delete</DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+            );
+
+            // ─── AI RESPONSE RENDERER ─────────────────────────────────────────────────
+            const AIResponse = ({ content, isStreaming, onCopy, onRegenerate }) => {
+                const [copied, setCopied] = useState(false);
+                const html = marked.parse(content || "");
+
+                const handleCopy = () => {
+                    navigator.clipboard.writeText(content).then(() => {
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 2000);
+                    });
+                };
+
+                return (
+                    <div className="space-y-3 w-full">
+                        <div
+                            className={cn("ai-prose text-sm leading-relaxed text-foreground/90", isStreaming && "typing-cursor")}
+                            dangerouslySetInnerHTML={{ __html: html }}
+                        />
+                        {!isStreaming && (
+                            <div className="flex items-center gap-1.5 pt-1 animate-in fade-in duration-500">
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button variant="outline" size="sm" className="h-7 px-2.5 text-xs gap-1.5 text-muted-foreground hover:text-foreground" onClick={handleCopy}>
+                                                {copied ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
+                                                {copied ? "Copied!" : "Copy"}
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>Copy response</TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={onRegenerate}>
+                                                <RefreshCw className="w-3.5 h-3.5" />
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>Regenerate</TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-green-500">
+                                                <ThumbsUp className="w-3.5 h-3.5" />
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>Good response</TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-red-500">
+                                                <ThumbsDown className="w-3.5 h-3.5" />
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>Bad response</TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            </div>
+                        )}
+                    </div>
+                );
+            };
+
+            // ─── CHAT MESSAGE ─────────────────────────────────────────────────────────
+            const ChatMessage = ({ message, isLast, isStreaming, onRegenerate }) => {
+                const isUser = message.role === "user";
+                return (
+                    <div className={cn("group flex gap-3 w-full animate-in slide-in-from-bottom-2 duration-300", isUser ? "justify-end" : "justify-start")}>
+                        {!isUser && (
+                            <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-sm mt-0.5 shrink-0">
+                                <span className="text-white font-black text-[10px]">OX</span>
+                            </div>
+                        )}
+                        <div className={cn("flex flex-col max-w-[88%] sm:max-w-[82%] lg:max-w-2xl", isUser ? "items-end" : "items-start")}>
+                            <div className="flex items-center gap-2 mb-1 px-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <span className="text-xs font-medium text-foreground">{isUser ? "You" : "oclxn"}</span>
+                                <span className="text-[10px] text-muted-foreground">{message.timestamp}</span>
+                            </div>
+                            <div className={cn(
+                                "relative px-4 py-3 shadow-sm text-sm",
+                                isUser
+                                    ? "bg-gradient-to-br from-violet-600 to-indigo-600 text-white rounded-2xl rounded-tr-sm"
+                                    : "bg-card border border-border rounded-2xl rounded-tl-sm w-full"
+                            )}>
+                                {message.role === "error" ? (
+                                    <div className="flex items-center gap-2 text-red-500 text-sm">
+                                        <AlertCircle className="w-4 h-4 shrink-0" />
+                                        <span>{message.content}</span>
+                                    </div>
+                                ) : isUser ? (
+                                    <p className="whitespace-pre-wrap text-[13px] sm:text-sm leading-relaxed">{message.content}</p>
+                                ) : (
+                                    <AIResponse
+                                        content={message.content}
+                                        isStreaming={isLast && isStreaming}
+                                        onRegenerate={onRegenerate}
+                                    />
+                                )}
+                            </div>
+                        </div>
+                        {isUser && (
+                            <Avatar className="h-8 w-8 border border-border mt-0.5 shrink-0">
+                                <AvatarFallback className="bg-muted text-foreground text-xs font-bold">ME</AvatarFallback>
+                            </Avatar>
+                        )}
+                    </div>
+                );
+            };
+
+            // ─── THINKING INDICATOR ───────────────────────────────────────────────────
+            const ThinkingIndicator = () => (
+                <div className="flex gap-3 w-full animate-in slide-in-from-bottom-2 duration-300">
+                    <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-sm mt-0.5 shrink-0">
+                        <span className="text-white font-black text-[10px]">OX</span>
+                    </div>
+                    <div className="bg-card border border-border rounded-2xl rounded-tl-sm px-5 py-4 flex items-center gap-1.5">
+                        <div className="thinking-dot w-2 h-2 rounded-full bg-primary"></div>
+                        <div className="thinking-dot w-2 h-2 rounded-full bg-primary"></div>
+                        <div className="thinking-dot w-2 h-2 rounded-full bg-primary"></div>
+                    </div>
+                </div>
+            );
+
+            // ─── WELCOME SCREEN ───────────────────────────────────────────────────────
+            const WelcomeScreen = ({ onPrompt }) => {
+                const suggestions = [
+                    { icon: Code, text: "Write a Python web scraper", color: "text-blue-500" },
+                    { icon: Brain, text: "Explain quantum computing simply", color: "text-purple-500" },
+                    { icon: Globe, text: "What's happening in tech today?", color: "text-green-500" },
+                    { icon: Wand2, text: "Write a creative short story", color: "text-orange-500" },
+                ];
+                return (
+                    <div className="flex flex-col items-center justify-center h-full px-4 text-center">
+                        <div className="float-anim mb-6">
+                            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-2xl shadow-violet-500/30 mx-auto">
+                                <span className="text-white font-black text-2xl tracking-tighter">OX</span>
+                            </div>
+                        </div>
+                        <h1 className="text-3xl font-bold mb-2">
+                            <span className="logo-gradient">oclxn</span>
+                        </h1>
+                        <p className="text-muted-foreground text-sm mb-1">by <span className="font-semibold text-foreground">Syed Developers</span></p>
+                        <p className="text-muted-foreground text-xs mb-8">Created by Syed Haider Hussein · Powered by real AI</p>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-xl">
+                            {suggestions.map((s, i) => (
+                                <button key={i} onClick={() => onPrompt(s.text)}
+                                    className="flex items-center gap-3 p-3.5 rounded-xl border border-border bg-card hover:bg-muted/60 hover:border-primary/30 transition-all text-left group shadow-sm hover:shadow-md">
+                                    <div className={cn("p-2 rounded-lg bg-muted group-hover:bg-background transition-colors", s.color)}>
+                                        <s.icon className="w-4 h-4" />
+                                    </div>
+                                    <span className="text-sm font-medium text-foreground">{s.text}</span>
+                                    <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                );
+            };
+
+            // ─── API KEY MODAL ────────────────────────────────────────────────────────
+            const ApiKeyModal = ({ onSave }) => {
+                return (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                        <div className="bg-card border border-border rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center">
+                                    <span className="text-white font-black text-xs">OX</span>
+                                </div>
+                                <div>
+                                    <h2 className="font-bold text-foreground">Connect oclxn</h2>
+                                    <p className="text-xs text-muted-foreground">Powered by Groq AI · Ready to go</p>
+                                </div>
+                            </div>
+                            <p className="text-xs text-muted-foreground mb-5 leading-relaxed">
+                                oclxn is pre-configured and ready. Just click the button below to start chatting instantly — no setup needed.
+                            </p>
+                            <Button
+                                className="w-full glow-btn bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white border-0"
+                                onClick={() => onSave(HARDCODED_KEY)}
+                            >
+                                <Zap className="w-4 h-4 mr-2" /> Connect &amp; Start Chatting
+                            </Button>
+                            <p className="text-[10px] text-muted-foreground text-center mt-3">oclxn by Syed Developers · Created by Syed Haider Hussein</p>
+                        </div>
+                    </div>
+                );
+            };
+
+            // ─── MAIN APP ─────────────────────────────────────────────────────────────
+            function App() {
+                const [apiKey, setApiKey] = useState(HARDCODED_KEY);
+                const [leftOpen, setLeftOpen] = useState(false);
+                const [rightOpen, setRightOpen] = useState(false);
+                const [isMobile, setIsMobile] = useState(false);
+                const [activeTab, setActiveTab] = useState("chats");
+                const [inputValue, setInputValue] = useState("");
+                const [isThinking, setIsThinking] = useState(false);
+                const [isStreaming, setIsStreaming] = useState(false);
+                const [searchQuery, setSearchQuery] = useState("");
+                const [activeChat, setActiveChat] = useState("new");
+                const [messages, setMessages] = useState([]);
+                const [abortCtrl, setAbortCtrl] = useState(null);
+                const scrollRef = useRef(null);
+                const textareaRef = useRef(null);
+                const { theme, setTheme } = useTheme();
+
+                const [chats, setChats] = useState([
+                    { id: "c1", label: "Getting started with oclxn", pinned: true, time: "Just now" },
+                    { id: "c2", label: "Python web scraper help", pinned: false, time: "1 hour ago" },
+                    { id: "c3", label: "Creative writing project", pinned: false, time: "Yesterday" },
+                    { id: "c4", label: "React component architecture", pinned: false, time: "2 days ago" },
+                    { id: "c5", label: "Investment strategies", pinned: false, time: "3 days ago" },
+                ]);
+
+                useEffect(() => {
+                    const check = () => {
+                        const m = window.innerWidth < 768;
+                        setIsMobile(m);
+                        setLeftOpen(!m);
+                        if (m) setRightOpen(false);
+                    };
+                    check();
+                    window.addEventListener("resize", check);
+                    return () => window.removeEventListener("resize", check);
+                }, []);
+
+                useEffect(() => {
+                    if (scrollRef.current) {
+                        scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+                    }
+                }, [messages, isThinking]);
+
+                const saveKey = (k) => {
+                    setApiKey(k);
+                };
+
+                const handleNewChat = () => {
+                    setMessages([]);
+                    setActiveChat("new");
+                    if (isMobile) setLeftOpen(false);
+                    textareaRef.current?.focus();
+                };
+
+                const handleSelectChat = (id) => {
+                    setActiveChat(id);
+                    setMessages([]);
+                    if (isMobile) setLeftOpen(false);
+                };
+
+                const handleStop = () => {
+                    abortCtrl?.abort();
+                    setIsThinking(false);
+                    setIsStreaming(false);
+                };
+
+                const sendMessage = useCallback(async (text) => {
+                    if (!text.trim() || isThinking || isStreaming) return;
+                    const userMsg = {
+                        id: Date.now(),
+                        role: "user",
+                        content: text.trim(),
+                        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+                    };
+                    const updatedMessages = [...messages, userMsg];
+                    setMessages(updatedMessages);
+                    setInputValue("");
+                    setIsThinking(true);
+
+                    // Auto-title the new chat
+                    if (messages.length === 0) {
+                        const title = text.trim().slice(0, 42) + (text.length > 42 ? "…" : "");
+                        const newId = "c" + Date.now();
+                        setActiveChat(newId);
+                        setChats(prev => [{ id: newId, label: title, pinned: false, time: "Just now" }, ...prev]);
+                    }
+
+                    const ctrl = new AbortController();
+                    setAbortCtrl(ctrl);
+
+                    try {
+                        const aiMsg = {
+                            id: Date.now() + 1,
+                            role: "ai",
+                            content: "",
+                            timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+                        };
+                        setMessages(prev => [...prev, aiMsg]);
+                        setIsThinking(false);
+                        setIsStreaming(true);
+
+                        // Build conversation history (exclude the empty AI placeholder)
+                        const historyForAPI = updatedMessages;
+
+                        await callClaudeAPI(
+                            historyForAPI,
+                            (chunk) => {
+                                setMessages(prev => prev.map(m => m.id === aiMsg.id ? { ...m, content: chunk } : m));
+                            },
+                            ctrl.signal
+                        );
+                    } catch (err) {
+                        if (err.name === "AbortError") {
+                            // stopped by user, keep whatever was streamed
+                        } else {
+                            const errMsg = {
+                                id: Date.now() + 2,
+                                role: "error",
+                                content: err.message || "Something went wrong. Please check your API key.",
+                                timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+                            };
+                            setMessages(prev => [...prev.filter(m => m.content !== ""), errMsg]);
+                        }
+                    } finally {
+                        setIsThinking(false);
+                        setIsStreaming(false);
+                        setAbortCtrl(null);
+                    }
+                }, [messages, isThinking, isStreaming]);
+
+                const handleSend = (e) => {
+                    e?.preventDefault();
+                    sendMessage(inputValue);
+                };
+
+                const handleKeyDown = (e) => {
+                    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
+                };
+
+                const handleRegenerate = useCallback(() => {
+                    const lastUser = [...messages].reverse().find(m => m.role === "user");
+                    if (lastUser) {
+                        setMessages(prev => prev.slice(0, prev.findIndex(m => m.id === lastUser.id) + 1));
+                        setTimeout(() => sendMessage(lastUser.content), 100);
+                    }
+                }, [messages, sendMessage]);
+
+                const pinnedChats = chats.filter(c => c.pinned && c.label.toLowerCase().includes(searchQuery.toLowerCase()));
+                const recentChats = chats.filter(c => !c.pinned && c.label.toLowerCase().includes(searchQuery.toLowerCase()));
+
+                return (
+                    <>
+                        {!apiKey && <ApiKeyModal onSave={saveKey} />}
+                        <div className="flex h-screen w-full bg-background overflow-hidden">
+                            {/* Mobile overlay */}
+                            {isMobile && leftOpen && <div className="sidebar-overlay active" onClick={() => setLeftOpen(false)} />}
+
+                            {/* ─── LEFT SIDEBAR ─── */}
+                            <aside className={cn(
+                                "flex flex-col border-r border-sidebar-border bg-sidebar shrink-0 transition-all duration-300 overflow-hidden",
+                                "md:relative fixed inset-y-0 left-0 z-50",
+                                "w-[280px] max-w-[85vw]",
+                                leftOpen ? "translate-x-0 md:w-[280px]" : "-translate-x-full md:translate-x-0 md:w-0 md:opacity-0"
+                            )}>
+                                <div className="flex flex-col h-full min-w-[280px] p-4">
+                                    {/* Header */}
+                                    <div className="flex items-center justify-between mb-5 pl-1">
+                                        <div className="flex items-center gap-2.5">
+                                            <Logo />
+                                            <div>
+                                                <span className="text-base font-black tracking-tight text-sidebar-foreground logo-gradient">oclxn</span>
+                                                <p className="text-[9px] text-muted-foreground leading-none mt-0.5">by Syed Developers</p>
+                                            </div>
+                                        </div>
+                                        <Button variant="ghost" size="icon" onClick={() => setLeftOpen(false)} className="h-8 w-8">
+                                            <PanelLeft className="w-4 h-4 text-sidebar-foreground/60" />
+                                        </Button>
+                                    </div>
+
+                                    {/* New Chat */}
+                                    <Button className="w-full justify-start gap-2 h-10 shadow-md mb-4 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white border-0 glow-btn" onClick={handleNewChat}>
+                                        <Plus className="w-4 h-4" /> New Chat
+                                    </Button>
+
+                                    {/* Search */}
+                                    <div className="relative mb-5 group">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                                        <Input placeholder="Search chats..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                                            className="pl-9 pr-8 h-9 bg-sidebar-accent/50 border-sidebar-border focus:bg-background transition-all text-sm" />
+                                        {searchQuery && <button onClick={() => setSearchQuery("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                                            <X className="w-3.5 h-3.5" />
+                                        </button>}
+                                    </div>
+
+                                    {/* Nav */}
+                                    <div className="space-y-0.5 mb-5">
+                                        <SidebarItem icon={MessageSquare} label="Chats" shortcut="⌘1" active={activeTab === "chats"} count={chats.length} onClick={() => setActiveTab("chats")} />
+                                        <SidebarItem icon={Bookmark} label="Saved" shortcut="⌘2" active={activeTab === "saved"} onClick={() => setActiveTab("saved")} />
+                                        <SidebarItem icon={Settings} label="Settings" shortcut="⌘," active={activeTab === "settings"} onClick={() => setActiveTab("settings")} />
+                                    </div>
+
+                                    {/* Chat History */}
+                                    <div className="flex-1 overflow-y-auto -mx-2 px-2 space-y-4">
+                                        {pinnedChats.length > 0 && (
+                                            <div>
+                                                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-2 mb-1.5">Pinned</p>
+                                                <div className="space-y-0.5">
+                                                    {pinnedChats.map(c => (
+                                                        <HistoryItem key={c.id} label={c.label} active={c.id === activeChat} isPinned
+                                                            onUnpin={() => setChats(p => p.map(x => x.id === c.id ? { ...x, pinned: false } : x))}
+                                                            onDelete={() => setChats(p => p.filter(x => x.id !== c.id))}
+                                                            onClick={() => handleSelectChat(c.id)} />
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                        {recentChats.length > 0 && (
+                                            <div>
+                                                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-2 mb-1.5">Recent</p>
+                                                <div className="space-y-0.5">
+                                                    {recentChats.map(c => (
+                                                        <HistoryItem key={c.id} label={c.label} active={c.id === activeChat}
+                                                            onPin={() => setChats(p => p.map(x => x.id === c.id ? { ...x, pinned: true } : x))}
+                                                            onDelete={() => setChats(p => p.filter(x => x.id !== c.id))}
+                                                            onClick={() => handleSelectChat(c.id)} />
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Footer */}
+                                    <div className="pt-3 border-t border-sidebar-border mt-3">
+                                        <div className="flex items-center gap-2.5 px-2">
+                                            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shrink-0">
+                                                <span className="text-white text-[9px] font-black">SH</span>
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-xs font-semibold text-sidebar-foreground truncate">Syed Haider Hussein</p>
+                                                <p className="text-[10px] text-muted-foreground">Syed Developers</p>
+                                            </div>
+                                            <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
+                                                {theme === "dark" ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </aside>
+
+                            {/* ─── MAIN CHAT ─── */}
+                            <div className="flex flex-col flex-1 min-w-0">
+                                {/* Top bar */}
+                                <header className="flex items-center justify-between px-4 h-14 border-b border-border bg-background/80 backdrop-blur-sm shrink-0 z-10">
+                                    <div className="flex items-center gap-3">
+                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setLeftOpen(p => !p)}>
+                                            <Menu className="w-4 h-4" />
+                                        </Button>
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-black text-sm logo-gradient">oclxn</span>
+                                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-primary/30 text-primary">AI</Badge>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                        <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/10 border border-green-500/20">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+                                            <span className="text-[10px] text-green-600 font-medium">Live</span>
+                                        </div>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
+                                            {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                                        </Button>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setRightOpen(p => !p)}>
+                                            <PanelRight className="w-4 h-4" />
+                                        </Button>
+                                    </div>
+                                </header>
+
+                                {/* Messages */}
+                                <div ref={scrollRef} className="flex-1 overflow-y-auto">
+                                    <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
+                                        {messages.length === 0 ? (
+                                            <WelcomeScreen onPrompt={text => { setInputValue(text); setTimeout(() => sendMessage(text), 50); }} />
+                                        ) : (
+                                            <>
+                                                {messages.filter(m => m.content !== "" || m.role === "user").map((msg, i) => (
+                                                    <ChatMessage
+                                                        key={msg.id}
+                                                        message={msg}
+                                                        isLast={i === messages.length - 1}
+                                                        isStreaming={isStreaming}
+                                                        onRegenerate={handleRegenerate}
+                                                    />
+                                                ))}
+                                                {isThinking && <ThinkingIndicator />}
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Input */}
+                                <div className="border-t border-border bg-background/80 backdrop-blur-sm px-4 py-3">
+                                    <div className="max-w-3xl mx-auto">
+                                        <div className="relative flex items-end gap-2 bg-card border border-border rounded-2xl shadow-sm hover:border-primary/30 focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/10 transition-all">
+                                            <Textarea
+                                                ref={textareaRef}
+                                                value={inputValue}
+                                                onChange={e => setInputValue(e.target.value)}
+                                                onKeyDown={handleKeyDown}
+                                                placeholder="Ask oclxn anything…"
+                                                rows={1}
+                                                className="flex-1 resize-none border-0 bg-transparent px-4 py-3.5 text-sm placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 min-h-[52px] max-h-[200px] overflow-y-auto"
+                                                style={{ fieldSizing: "content" }}
+                                                disabled={!apiKey}
+                                            />
+                                            <div className="flex items-center gap-1 pr-2 pb-2">
+                                                {(isThinking || isStreaming) ? (
+                                                    <Button size="icon" onClick={handleStop}
+                                                        className="h-9 w-9 rounded-xl bg-red-500 hover:bg-red-600 text-white border-0 shrink-0">
+                                                        <StopCircle className="w-4 h-4" />
+                                                    </Button>
+                                                ) : (
+                                                    <Button size="icon" onClick={handleSend}
+                                                        disabled={!inputValue.trim() || !apiKey}
+                                                        className="h-9 w-9 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white border-0 shrink-0 disabled:opacity-30 disabled:cursor-not-allowed shadow-md hover:shadow-lg transition-all">
+                                                        <Send className="w-4 h-4" />
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <p className="text-center text-[10px] text-muted-foreground mt-2">
+                                            oclxn · <span className="font-medium">Syed Developers</span> · Created by Syed Haider Hussein · Press Enter to send
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* ─── RIGHT SIDEBAR ─── */}
+                            <aside className={cn(
+                                "flex flex-col border-l border-sidebar-border bg-sidebar shrink-0 transition-all duration-300 overflow-hidden",
+                                rightOpen ? "w-[260px]" : "w-0 opacity-0"
+                            )}>
+                                <div className="flex flex-col h-full min-w-[260px]">
+                                    <div className="flex items-center justify-between p-4 border-b border-sidebar-border h-14">
+                                        <span className="font-semibold text-sm text-sidebar-foreground">About oclxn</span>
+                                        <Button variant="ghost" size="icon" onClick={() => setRightOpen(false)} className="h-8 w-8">
+                                            <X className="w-4 h-4 text-sidebar-foreground/60" />
+                                        </Button>
+                                    </div>
+                                    <div className="flex-1 overflow-y-auto p-4 space-y-5">
+                                        <div className="flex flex-col items-center text-center pt-2">
+                                            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center mb-3 shadow-xl shadow-violet-500/30">
+                                                <span className="text-white font-black text-xl">OX</span>
+                                            </div>
+                                            <h2 className="text-base font-black logo-gradient">oclxn</h2>
+                                            <p className="text-xs text-muted-foreground mt-1">by Syed Developers</p>
+                                            <p className="text-[11px] text-muted-foreground mt-0.5">Created by Syed Haider Hussein</p>
+                                        </div>
+                                        <Separator />
+                                        <div className="space-y-2">
+                                            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Capabilities</p>
+                                            {[
+                                                { icon: Globe, label: "Web Search", desc: "Real-time internet access", color: "text-green-500" },
+                                                { icon: Code, label: "Code & Debug", desc: "All programming languages", color: "text-blue-500" },
+                                                { icon: Brain, label: "Reasoning", desc: "Complex analysis & math", color: "text-purple-500" },
+                                                { icon: Wand2, label: "Creative", desc: "Writing & storytelling", color: "text-orange-500" },
+                                            ].map((cap, i) => (
+                                                <div key={i} className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/50 border border-border">
+                                                    <cap.icon className={cn("w-4 h-4 shrink-0", cap.color)} />
+                                                    <div className="min-w-0">
+                                                        <p className="text-xs font-medium text-foreground">{cap.label}</p>
+                                                        <p className="text-[10px] text-muted-foreground truncate">{cap.desc}</p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <Separator />
+                                        <div className="space-y-2">
+                                            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Status</p>
+                                            <div className="flex items-center gap-2.5 p-2.5 rounded-lg bg-green-500/10 border border-green-500/20">
+                                                <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
+                                                <div>
+                                                    <p className="text-xs font-medium text-foreground">API Connected</p>
+                                                    <p className="text-[10px] text-muted-foreground">Claude Sonnet 4</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-2.5 p-2.5 rounded-lg bg-green-500/10 border border-green-500/20">
+                                                <Globe className="w-4 h-4 text-green-500 shrink-0" />
+                                                <div>
+                                                    <p className="text-xs font-medium text-foreground">Web Search On</p>
+                                                    <p className="text-[10px] text-muted-foreground">Real-time internet</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <Separator />
+                                        <div className="text-center">
+                                            <p className="text-[10px] text-muted-foreground leading-relaxed">
+                                                oclxn is an AI chat interface powered by Anthropic's Claude. Built with love by <span className="font-semibold text-foreground">Syed Haider Hussein</span> at <span className="font-semibold text-foreground">Syed Developers</span>.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </aside>
+                        </div>
+                    </>
+                );
+            }
+
+            const root = createRoot(document.getElementById("root"));
+            root.render(
+                <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+                    <App />
+                </ThemeProvider>
+            );
         </script>
     </body>
 </html>
