@@ -1,8 +1,7 @@
 import React from "react";
 import { Send, StopCircle } from "lucide-react";
-import { Button } from "./ui/Button";
-import { Textarea } from "./ui/Textarea";
-
+import { Button } from "./Button";
+import { Textarea } from "./Textarea";
 export default function ChatInput({
   value,
   onChange,
