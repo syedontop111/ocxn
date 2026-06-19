@@ -1,5 +1,5 @@
 import React from "react";
-import { cn } from "@/utils/cn";
+const cn = (...classes) => classes.filter(Boolean).join(" ");
 
 const Separator = ({ className, orientation = "horizontal", ...props }) => (
   <div
